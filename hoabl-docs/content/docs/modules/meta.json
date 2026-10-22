@@ -2,5 +2,5 @@
   "title": "All modules",
   "icon": "LayoutGrid",
   "defaultOpen": true,
-  "pages": ["booking"]
+  "pages": ["booking", "customer-portal-cms"]
 }

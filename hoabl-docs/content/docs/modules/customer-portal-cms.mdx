@@ -1,0 +1,18 @@
+---
+title: Customer Portal CMS
+description: Objects behind the Customer Portal CMS admin screen and the content shown to customers.
+icon: PanelsTopLeft
+---
+
+## Overview
+
+The CMS lets the team manage what customers see in the portal. Each tab of the admin screen maps to one group of objects, and every record hangs off a single **Portal Configuration** record. Images and documents are stored once as **File** records and referenced from everywhere else.
+
+<Callout type="info" title="Reading the diagram">
+  Colors match the CMS tabs: Login, Investment &amp; RERA, Latest Updates, Latest Offerings (with the home carousel) and
+  Services. Grey tables are existing HoABL objects, included only so the relations have a target.
+</Callout>
+
+## ER diagram
+
+<ERDiagram module="customer-portal-cms" height={760} />
