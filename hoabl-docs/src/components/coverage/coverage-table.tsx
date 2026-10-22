@@ -14,6 +14,7 @@ import {
 
 type SortField = 'testClass' | 'coveredClass' | 'coverage';
 type SortDir = 'asc' | 'desc';
+type RowFilter = 'all' | CoverageLevel;
 
 interface Row {
   testClass: string;
@@ -141,7 +142,7 @@ export function CoverageTable({ dataset }: { dataset: CoverageDataset }) {
   const [sortField, setSortField] = useState<SortField>('testClass');
   const [sortDir, setSortDir] = useState<SortDir>('asc');
   const [grouped, setGrouped] = useState(false);
-  const [onlyBelowGood, setOnlyBelowGood] = useState(false);
+  const [rowFilter, setRowFilter] = useState<RowFilter>('all');
 
   const allRows = useMemo<Row[]>(
     () =>
@@ -161,10 +162,10 @@ export function CoverageTable({ dataset }: { dataset: CoverageDataset }) {
     const q = search.trim().toLowerCase();
     return allRows.filter(
       (r) =>
-        (!onlyBelowGood || r.pct < GOOD_THRESHOLD) &&
+        (rowFilter === 'all' || level(r.pct) === rowFilter) &&
         (!q || r.testClass.toLowerCase().includes(q) || r.coveredClass.toLowerCase().includes(q)),
     );
-  }, [allRows, search, onlyBelowGood]);
+  }, [allRows, search, rowFilter]);
 
   const compare = useMemo(() => {
     const dir = sortDir === 'asc' ? 1 : -1;
@@ -265,12 +266,14 @@ export function CoverageTable({ dataset }: { dataset: CoverageDataset }) {
           )}
         </div>
         <Segmented
-          label="Row filter"
-          value={onlyBelowGood ? 'below' : 'all'}
-          onChange={(v) => setOnlyBelowGood(v === 'below')}
+          label="Coverage filter"
+          value={rowFilter}
+          onChange={setRowFilter}
           options={[
             { value: 'all', label: 'All' },
-            { value: 'below', label: `Under ${GOOD_THRESHOLD}%` },
+            { value: 'good', label: `${GOOD_THRESHOLD}+` },
+            { value: 'fair', label: `${FAIR_THRESHOLD}-${GOOD_THRESHOLD}` },
+            { value: 'low', label: `<${FAIR_THRESHOLD}` },
           ]}
         />
         <Segmented
@@ -302,7 +305,7 @@ export function CoverageTable({ dataset }: { dataset: CoverageDataset }) {
                       No classes match <span className="font-medium text-fd-foreground">“{search}”</span>
                     </>
                   ) : (
-                    'No classes under the threshold.'
+                    'No classes in this coverage range.'
                   )}
                 </td>
               </tr>
