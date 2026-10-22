@@ -1,4 +1,5 @@
 import type { Column, Entity, ModuleSchema } from '@/lib/erd/types';
+import { fieldLabels } from './customer-portal-cms.labels';
 
 const id = (): Column => ({ name: 'Id', type: 'Id', pk: true });
 const lookup = (name: string, table: string, description?: string): Column => ({
@@ -253,6 +254,14 @@ const entities: Entity[] = [
   },
 ];
 
+const withLabels = (entity: Entity): Entity => ({
+  ...entity,
+  columns: entity.columns.map((column) => ({
+    ...column,
+    label: column.pk ? 'Record ID' : fieldLabels[entity.name]?.[column.name],
+  })),
+});
+
 export const customerPortalCms = {
   slug: 'customer-portal-cms',
   title: 'Customer Portal CMS',
@@ -265,5 +274,5 @@ export const customerPortalCms = {
     services: { label: 'Services', color: '#059669' },
     core: { label: 'HoABL Core', color: '#64748b' },
   },
-  entities,
+  entities: entities.map(withLabels),
 } satisfies ModuleSchema;
