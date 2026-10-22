@@ -99,6 +99,7 @@ export function SchemaTables({ module }: { module: string }) {
                     <tr key={column.name}>
                       <td>
                         <code>{column.name}</code>
+                        {column.label && <div className="mt-0.5 text-xs text-fd-muted-foreground">{column.label}</div>}
                       </td>
                       <td>
                         <code>{column.type}</code>
