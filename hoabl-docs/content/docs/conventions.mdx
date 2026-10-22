@@ -1,0 +1,67 @@
+---
+title: Conventions
+description: Naming rules, column flags and how to add a new module.
+icon: ScrollText
+---
+
+## ER diagrams
+
+Click a table to focus it and its direct relations. Use the group chips to hide whole areas, and switch between **All columns**, **Keys** and **Tables** to control density.
+
+## Schema tables
+
+| Flag | Meaning |
+| --- | --- |
+| `PK` | Primary key |
+| `FK` | Foreign key, drawn as a relation in the diagram |
+| `UNIQUE` | Unique constraint. A unique FK is drawn as `1:1`. |
+| `NULL` | Column accepts null |
+
+## Adding a module
+
+1. Create a schema file in `src/data/modules/`.
+2. Register it in `src/data/modules/index.ts`.
+3. Add `content/docs/modules/<name>.mdx` and list it in that folder's `meta.json`.
+
+## Callouts
+
+<Callout type="info" title="Info">
+  Use for neutral context, such as how a table relates to the rest of the module.
+</Callout>
+
+<Callout type="success" title="Success">
+  Use for confirmations, such as a migration that has been applied everywhere.
+</Callout>
+
+<Callout type="warning" title="Warning">
+  Use for things that can bite, such as a plot status that changes when a booking is held.
+</Callout>
+
+<Callout type="error" title="Error">
+  Use for destructive or breaking changes, such as dropping a column that other tables reference.
+</Callout>
+
+<Callout type="idea" title="Idea">
+  Use for tips and suggestions, such as indexing `bookings.customer_id` for faster lookups.
+</Callout>
+
+### Without a title
+
+<Callout type="info">A callout with only a description and no title.</Callout>
+
+<Callout type="warning">A warning with only a description and no title.</Callout>
+
+### Multiple paragraphs
+
+<Callout type="idea" title="Longer description">
+  The first paragraph explains the rule. It can wrap onto several lines when the text is long enough to fill the
+  available width of the page.
+
+  The second paragraph adds an example, with a `code` snippet and a **bold** word.
+</Callout>
+
+### Aliases
+
+<Callout type="warn" title="warn">`warn` is an alias for `warning`.</Callout>
+
+<Callout type="tip" title="tip">`tip` is an alias for `idea`.</Callout>

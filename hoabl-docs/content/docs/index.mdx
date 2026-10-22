@@ -1,0 +1,16 @@
+---
+title: HoABL Docs
+description: Data model and module documentation.
+icon: BookOpen
+---
+
+import { CalendarCheck, GitFork, Table2, Search } from 'lucide-react';
+
+Each module has one page with an interactive ER diagram, a table overview, column references and written documentation.
+
+<Cards>
+  <Card icon={<CalendarCheck />} title="Booking" href="/docs/modules/booking" description="Leads, plots, bookings, payments and commissions." />
+  <Card icon={<GitFork />} title="ER diagrams" href="/docs/conventions#er-diagrams" description="Focus, filter and search large schemas." />
+  <Card icon={<Table2 />} title="Schema tables" href="/docs/conventions#schema-tables" description="Column references generated from one source." />
+  <Card icon={<Search />} title="Conventions" href="/docs/conventions" description="Naming, flags and how to add a module." />
+</Cards>
