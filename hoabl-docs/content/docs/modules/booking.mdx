@@ -1,0 +1,75 @@
+---
+title: Booking
+description: How a lead becomes a confirmed plot booking, and the tables that record it.
+icon: CalendarCheck
+---
+
+## Overview
+
+The Booking module covers the journey from an enquiry to a registered plot. A **lead** is created for a customer against a project, and a **booking** reserves a single plot once the customer commits. Payments are collected against a **payment plan**, and any channel partner involved earns a **commission**.
+
+<Callout type="info" title="Exploring the diagram">
+  Click a table in the diagram to focus it and its direct relations. Use **View docs** in the focus bar to jump to
+  that table's reference below.
+</Callout>
+
+## ER diagram
+
+<ERDiagram module="booking" height={720} />
+
+## Booking flow
+
+<Steps>
+<Step>
+
+### Capture the lead
+
+A `leads` row is created with its `source` and, for partner-sourced leads, the `channel_partner_id`.
+
+</Step>
+<Step>
+
+### Visit the site
+
+Each visit is stored in `site_visits`. The lead moves to the `visited` stage once an outcome is recorded.
+
+</Step>
+<Step>
+
+### Hold and book a plot
+
+A `bookings` row is created in `draft`. The `plot_id` column is unique, so a plot can have only one booking at a time. The plot status changes to `held`.
+
+</Step>
+<Step>
+
+### Collect payments
+
+The token amount and later instalments are recorded in `payments`, each linked to a `payment_milestones` row. An `invoices` row is issued for every successful payment.
+
+</Step>
+<Step>
+
+### Confirm and register
+
+Once KYC documents in `booking_documents` are verified and the token is paid, the booking becomes `confirmed`. A `commissions` row accrues when a channel partner is attached.
+
+</Step>
+</Steps>
+
+## Business rules
+
+| Rule | Enforced by |
+| --- | --- |
+| A plot can have only one active booking | Unique constraint on `bookings.plot_id` |
+| A lead converts to at most one booking | Unique constraint on `bookings.lead_id` |
+| Commission is created once per booking | Unique constraint on `commissions.booking_id` |
+| Invoices exist only for successful payments | Application logic in the payment webhook |
+
+## Tables
+
+<EntityOverview module="booking" />
+
+## Column reference
+
+<SchemaTables module="booking" />

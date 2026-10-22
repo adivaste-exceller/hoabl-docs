@@ -1,0 +1,6 @@
+{
+  "title": "All modules",
+  "icon": "LayoutGrid",
+  "defaultOpen": true,
+  "pages": ["booking"]
+}
