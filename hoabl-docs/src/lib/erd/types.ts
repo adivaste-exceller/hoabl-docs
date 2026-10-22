@@ -1,5 +1,8 @@
 export interface Column {
+  /** API or physical column name. */
   name: string;
+  /** Friendly field name. Falls back to `name` when omitted. */
+  label?: string;
   type: string;
   pk?: boolean;
   /** Foreign key reference. Drives the relations drawn in the ER diagram. */

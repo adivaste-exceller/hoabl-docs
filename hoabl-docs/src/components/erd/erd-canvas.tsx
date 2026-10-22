@@ -20,7 +20,8 @@ import {
 } from '@xyflow/react';
 import ELK from 'elkjs/lib/elk.bundled.js';
 import { Maximize2, Minimize2, RotateCcw, Search, X } from 'lucide-react';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 import { cn } from '@/lib/cn';
 import { getRelations } from '@/lib/erd/relations';
 import type { Column, Entity, ModuleSchema, Relation } from '@/lib/erd/types';
@@ -98,9 +99,116 @@ interface TableNodeData extends Record<string, unknown> {
 
 type TableNode = Node<TableNodeData, 'table'>;
 
+/** Hover tooltip rendered in a portal so it keeps its size at any zoom level and is never clipped. */
+function useHoverTip(content: ReactNode) {
+  const [rect, setRect] = useState<DOMRect | null>(null);
+
+  const bind = {
+    onMouseEnter: (event: React.MouseEvent<HTMLElement>) => setRect(event.currentTarget.getBoundingClientRect()),
+    onMouseLeave: () => setRect(null),
+    onMouseDown: () => setRect(null),
+  };
+
+  const TIP_WIDTH = 288;
+  const tip =
+    rect &&
+    createPortal(
+      <div
+        role="tooltip"
+        className="pointer-events-none fixed z-[70] rounded-lg border border-fd-border bg-fd-popover p-3 text-xs text-fd-popover-foreground shadow-lg"
+        style={{
+          width: TIP_WIDTH,
+          top: Math.max(8, Math.min(rect.top, window.innerHeight - 180)),
+          left: rect.right + 10 + TIP_WIDTH > window.innerWidth ? rect.left - TIP_WIDTH - 10 : rect.right + 10,
+        }}
+      >
+        {content}
+      </div>,
+      document.body,
+    );
+
+  return { bind, tip };
+}
+
+function ColumnTip({ column }: { column: Column }) {
+  const flags = [column.pk && 'Primary key', column.unique && 'Unique', column.nullable && 'Nullable'].filter(Boolean);
+  return (
+    <div className="flex flex-col gap-1.5">
+      <div>
+        <div className="text-[13px] font-semibold">{column.label ?? column.name}</div>
+        <code className="font-mono text-[11px] text-fd-muted-foreground">{column.name}</code>
+      </div>
+      <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-fd-muted-foreground">
+        <span className="rounded border border-fd-border px-1.5 py-px font-mono text-[10px]">{column.type}</span>
+        {flags.map((flag) => (
+          <span key={String(flag)}>{flag}</span>
+        ))}
+      </div>
+      {column.fk && (
+        <div className="text-fd-muted-foreground">
+          References <code className="font-mono text-fd-foreground">{column.fk.table}</code>
+        </div>
+      )}
+      {column.description && <p className="m-0 leading-relaxed text-fd-muted-foreground">{column.description}</p>}
+    </div>
+  );
+}
+
+function EntityTip({ entity, groupLabel }: { entity: Entity; groupLabel: string }) {
+  return (
+    <div className="flex flex-col gap-1.5">
+      <div>
+        <div className="text-[13px] font-semibold">{entity.label ?? entity.name}</div>
+        <code className="font-mono text-[11px] text-fd-muted-foreground">{entity.name}</code>
+      </div>
+      <div className="text-fd-muted-foreground">
+        {groupLabel} · {entity.columns.length} fields
+      </div>
+      {entity.description && <p className="m-0 leading-relaxed text-fd-muted-foreground">{entity.description}</p>}
+    </div>
+  );
+}
+
+function ColumnRow({ column, color, active }: { column: Column; color: string; active: boolean }) {
+  const { bind, tip } = useHoverTip(<ColumnTip column={column} />);
+  return (
+    <li
+      {...bind}
+      className={cn('relative flex items-center gap-2 rounded px-1.5 text-xs hover:bg-fd-accent', active && 'bg-fd-accent')}
+      style={{ height: ROW_HEIGHT }}
+    >
+      <span className="w-6 shrink-0 text-[9px] font-bold tracking-wide">
+        {column.pk && <span style={{ color }}>PK</span>}
+        {column.fk && !column.pk && <span className="text-fd-muted-foreground">FK</span>}
+      </span>
+      <span className={cn('truncate font-mono', column.pk && 'font-semibold')}>{column.name}</span>
+      {column.nullable && <span className="text-fd-muted-foreground">?</span>}
+      <span className="ml-auto shrink-0 truncate pl-2 font-mono text-[11px] text-fd-muted-foreground">
+        {column.type}
+      </span>
+      <Handle
+        id={`${column.name}-l`}
+        type="source"
+        position={Position.Left}
+        isConnectable={false}
+        className="!size-1.5 !min-h-0 !min-w-0 !border-0 !bg-transparent"
+      />
+      <Handle
+        id={`${column.name}-r`}
+        type="source"
+        position={Position.Right}
+        isConnectable={false}
+        className="!size-1.5 !min-h-0 !min-w-0 !border-0 !bg-transparent"
+      />
+      {tip}
+    </li>
+  );
+}
+
 function TableNodeView({ data }: NodeProps<TableNode>) {
   const { entity, color, groupLabel, mode, dimmed, selected, activeColumns } = data;
   const columns = visibleColumns(entity, mode);
+  const header = useHoverTip(<EntityTip entity={entity} groupLabel={groupLabel} />);
 
   return (
     <div
@@ -112,13 +220,12 @@ function TableNodeView({ data }: NodeProps<TableNode>) {
       style={{ width: NODE_WIDTH, ...(selected ? { borderColor: color, ['--tw-ring-color' as string]: color } : {}) }}
     >
       <div
+        {...header.bind}
         className="flex items-center justify-between gap-2 rounded-t-[7px] px-3 text-white"
         style={{ height: HEADER_HEIGHT, background: color }}
       >
-        <span
-          className={cn('truncate text-[13px] font-semibold', !entity.label && 'font-mono')}
-          title={entity.name}
-        >
+        {header.tip}
+        <span className={cn('truncate text-[13px] font-semibold', !entity.label && 'font-mono')}>
           {entity.label ?? entity.name}
         </span>
         <span className="shrink-0 text-[10px] font-medium uppercase tracking-wide opacity-80">{groupLabel}</span>
@@ -127,38 +234,7 @@ function TableNodeView({ data }: NodeProps<TableNode>) {
       {columns.length > 0 && (
         <ul style={{ padding: NODE_PADDING }}>
           {columns.map((column) => (
-            <li
-              key={column.name}
-              className={cn(
-                'relative flex items-center gap-2 rounded px-1.5 text-xs',
-                activeColumns.includes(column.name) && 'bg-fd-accent',
-              )}
-              style={{ height: ROW_HEIGHT }}
-            >
-              <span className="w-6 shrink-0 text-[9px] font-bold tracking-wide">
-                {column.pk && <span style={{ color }}>PK</span>}
-                {column.fk && !column.pk && <span className="text-fd-muted-foreground">FK</span>}
-              </span>
-              <span className={cn('truncate font-mono', column.pk && 'font-semibold')}>{column.name}</span>
-              {column.nullable && <span className="text-fd-muted-foreground">?</span>}
-              <span className="ml-auto shrink-0 truncate pl-2 font-mono text-[11px] text-fd-muted-foreground">
-                {column.type}
-              </span>
-              <Handle
-                id={`${column.name}-l`}
-                type="source"
-                position={Position.Left}
-                isConnectable={false}
-                className="!size-1.5 !min-h-0 !min-w-0 !border-0 !bg-transparent"
-              />
-              <Handle
-                id={`${column.name}-r`}
-                type="source"
-                position={Position.Right}
-                isConnectable={false}
-                className="!size-1.5 !min-h-0 !min-w-0 !border-0 !bg-transparent"
-              />
-            </li>
+            <ColumnRow key={column.name} column={column} color={color} active={activeColumns.includes(column.name)} />
           ))}
         </ul>
       )}
