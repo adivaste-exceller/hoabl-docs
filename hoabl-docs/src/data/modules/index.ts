@@ -1,8 +1,10 @@
 import type { ModuleSchema } from '@/lib/erd/types';
 import { booking } from './booking';
+import { customerPortalCms } from './customer-portal-cms';
 
 const modules: Record<string, ModuleSchema> = {
   [booking.slug]: booking,
+  [customerPortalCms.slug]: customerPortalCms,
 };
 
 export function getModule(slug: string): ModuleSchema {
