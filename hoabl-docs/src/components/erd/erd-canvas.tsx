@@ -15,10 +15,11 @@ import {
   useReactFlow,
   type Edge,
   type Node,
+  type NodeChange,
   type NodeProps,
 } from '@xyflow/react';
 import ELK from 'elkjs/lib/elk.bundled.js';
-import { Maximize2, Minimize2, Search, X } from 'lucide-react';
+import { Maximize2, Minimize2, RotateCcw, Search, X } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { cn } from '@/lib/cn';
 import { getRelations } from '@/lib/erd/relations';
@@ -104,7 +105,7 @@ function TableNodeView({ data }: NodeProps<TableNode>) {
   return (
     <div
       className={cn(
-        'rounded-lg border bg-fd-card text-fd-card-foreground shadow-sm transition-opacity',
+        'cursor-grab rounded-lg border bg-fd-card text-fd-card-foreground shadow-sm transition-opacity active:cursor-grabbing',
         dimmed && 'opacity-25',
         selected ? 'ring-2 ring-offset-1 ring-offset-fd-background' : 'border-fd-border',
       )}
@@ -198,6 +199,7 @@ function Canvas({ schema, height }: { schema: ModuleSchema; height: number }) {
   const [selected, setSelected] = useState<string | null>(null);
   const [query, setQuery] = useState('');
   const [fullscreen, setFullscreen] = useState(false);
+  const [layoutRun, setLayoutRun] = useState(0);
   const [positions, setPositions] = useState<Map<string, { x: number; y: number }>>(new Map());
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -218,7 +220,20 @@ function Canvas({ schema, height }: { schema: ModuleSchema; height: number }) {
     return () => {
       cancelled = true;
     };
-  }, [entities, relations, mode, flow]);
+  }, [entities, relations, mode, flow, layoutRun]);
+
+  // Keep dragged positions in state, otherwise the derived nodes snap back on the next render.
+  const onNodesChange = useCallback((changes: NodeChange<TableNode>[]) => {
+    setPositions((prev) => {
+      let next: Map<string, { x: number; y: number }> | null = null;
+      for (const change of changes) {
+        if (change.type !== 'position' || !change.position) continue;
+        next ??= new Map(prev);
+        next.set(change.id, change.position);
+      }
+      return next ?? prev;
+    });
+  }, []);
 
   const neighbours = useMemo(() => {
     if (!selected) return null;
@@ -344,6 +359,8 @@ function Canvas({ schema, height }: { schema: ModuleSchema; height: number }) {
         colorMode={colorMode}
         connectionMode={ConnectionMode.Loose}
         nodesConnectable={false}
+        nodesDraggable
+        onNodesChange={onNodesChange}
         elementsSelectable={false}
         onlyRenderVisibleElements
         minZoom={0.1}
@@ -435,6 +452,15 @@ function Canvas({ schema, height }: { schema: ModuleSchema; height: number }) {
               </button>
             ))}
           </div>
+          <button
+            type="button"
+            onClick={() => setLayoutRun((n) => n + 1)}
+            className="flex size-8 items-center justify-center rounded-md border border-fd-border bg-fd-card hover:bg-fd-accent"
+            aria-label="Reset layout"
+            title="Reset layout"
+          >
+            <RotateCcw className="size-4" />
+          </button>
           <button
             type="button"
             onClick={() => setFullscreen((v) => !v)}
