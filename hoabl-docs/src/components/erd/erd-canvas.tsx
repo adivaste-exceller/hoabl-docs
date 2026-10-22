@@ -114,7 +114,12 @@ function TableNodeView({ data }: NodeProps<TableNode>) {
         className="flex items-center justify-between gap-2 rounded-t-[7px] px-3 text-white"
         style={{ height: HEADER_HEIGHT, background: color }}
       >
-        <span className="truncate font-mono text-[13px] font-semibold">{entity.name}</span>
+        <span
+          className={cn('truncate text-[13px] font-semibold', !entity.label && 'font-mono')}
+          title={entity.name}
+        >
+          {entity.label ?? entity.name}
+        </span>
         <span className="shrink-0 text-[10px] font-medium uppercase tracking-wide opacity-80">{groupLabel}</span>
       </div>
 
@@ -290,7 +295,9 @@ function Canvas({ schema, height }: { schema: ModuleSchema; height: number }) {
   const matches = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return [];
-    return schema.entities.filter((e) => e.name.toLowerCase().includes(q)).slice(0, 6);
+    return schema.entities
+      .filter((e) => e.name.toLowerCase().includes(q) || e.label?.toLowerCase().includes(q))
+      .slice(0, 6);
   }, [query, schema.entities]);
 
   const focusTable = useCallback(
@@ -379,7 +386,7 @@ function Canvas({ schema, height }: { schema: ModuleSchema; height: number }) {
                         className="size-2 rounded-full"
                         style={{ background: schema.groups[e.group]?.color }}
                       />
-                      {e.name}
+                      {e.label ?? e.name}
                     </button>
                   </li>
                 ))}
@@ -442,7 +449,9 @@ function Canvas({ schema, height }: { schema: ModuleSchema; height: number }) {
         {selectedEntity && (
           <Panel position="top-center" className="!mt-3">
             <div className="flex items-center gap-3 rounded-full border border-fd-border bg-fd-card py-1 pl-4 pr-1.5 text-xs shadow-sm">
-              <span className="font-mono font-semibold">{selectedEntity.name}</span>
+              <span className={cn('font-semibold', !selectedEntity.label && 'font-mono')}>
+                {selectedEntity.label ?? selectedEntity.name}
+              </span>
               <span className="text-fd-muted-foreground">
                 {relations.filter((r) => r.source === selected || r.target === selected).length} relations
               </span>

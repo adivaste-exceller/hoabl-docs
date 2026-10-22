@@ -11,7 +11,10 @@ export interface Column {
 }
 
 export interface Entity {
+  /** Table or object API name. Used for ids, anchors and relations. */
   name: string;
+  /** Friendly display name. Falls back to `name` when omitted. */
+  label?: string;
   /** Key into `ModuleSchema.groups`. */
   group: string;
   description?: string;

@@ -45,7 +45,7 @@ export function EntityOverview({ module }: { module: string }) {
             <tr key={entity.name}>
               <td>
                 <a href={`#${entity.name}`}>
-                  <code>{entity.name}</code>
+                  {entity.label ?? <code>{entity.name}</code>}
                 </a>
               </td>
               <td>
@@ -78,7 +78,8 @@ export function SchemaTables({ module }: { module: string }) {
           <section key={entity.name} id={entity.name} className="scroll-mt-24">
             <div className="mb-1 flex items-center gap-2">
               <span className="size-2.5 rounded-full" style={{ background: schema.groups[entity.group]?.color }} />
-              <h3 className="m-0 font-mono text-lg font-semibold">{entity.name}</h3>
+              <h3 className="m-0 text-lg font-semibold">{entity.label ?? entity.name}</h3>
+              {entity.label && <code className="text-xs">{entity.name}</code>}
             </div>
             {entity.description && <p className="mb-3 mt-1 text-fd-muted-foreground">{entity.description}</p>}
 
