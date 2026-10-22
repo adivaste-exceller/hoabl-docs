@@ -36,3 +36,25 @@ The CMS lets the team manage what customers see in the portal. Each tab of the a
 | `CustomerPortal_VideoContentProvider` | Returns the videos (up to 50) targeted to a given launch and phase, with embed URL, thumbnail, channel details and publish date. Visibility is resolved through the video targeting rows. |
 | `CustomerPortal_AliasContentProvider` | Supplies the display aliases for projects and launches, used in the portal in place of the Salesforce names, with a fallback value when no alias is set. |
 | `CustomerPortal_FilePublicUrlHandler` | Called by the `CustomerPortal_FilePublicUrlTrigger` trigger when a file is attached to a File record. It picks the latest file version, creates a public distribution link, and stores the file name, size, download URL and preview URL on the File record. |
+
+## Test coverage
+
+Coverage measured on HoABL-UAT on 22 Oct 2026 by running the five test classes below together. All tests passed.
+
+| Class | Test class | Coverage |
+| --- | --- | --- |
+| `CustomerPortal_CMSController` | `TestCustomerPortal_CMS` | 87% (78/90) |
+| `CustomerPortal_CMSLoginController` | `TestCustomerPortal_CMS` | 95% (61/64) |
+| `CustomerPortal_CMSLaunchController` | `TestCustomerPortal_CMS` | 76% (228/301) |
+| `CustomerPortal_CMSLatestUpdatesCtrl` | `TestCustomerPortal_CMSLatestUpdates` | 90% (274/305) |
+| `CustomerPortal_CMSOfferingsController` | `TestCustomerPortal_CMS` | 84% (110/131) |
+| `CustomerPortal_CMSServicesController` | `TestCustomerPortal_CMS` | 80% (245/307) |
+| `CustomerPortal_SiteContentProvider` | `TestCustomerPortal_ContentProvider` | 88% (14/16) |
+| `CustomerPortal_LoginContentProvider` | `TestCustomerPortal_ContentProvider` | 100% (17/17) |
+| `CustomerPortal_HomeContentProvider` | `TestCustomerPortal_ContentProvider` | 86% (32/37) |
+| `CustomerPortal_LaunchContentProvider` | `TestCustomerPortal_ContentProvider` | 91% (93/102) |
+| `CustomerPortal_ServiceContentProvider` | `TestCustomerPortal_ContentProvider` | 96% (51/53) |
+| `CustomerPortal_NewsLetterContentProvider` | `TestCustomerPortal_ContentProvider` | 94% (30/32) |
+| `CustomerPortal_VideoContentProvider` | `TestCustomerPortal_ContentProvider` | 95% (38/40) |
+| `CustomerPortal_AliasContentProvider` | `TestCustomerPortal_AliasContentProvider` | 81% (26/32) |
+| `CustomerPortal_FilePublicUrlHandler` | `TestCustomerPortal_FilePublicUrlHandler` | 95% (125/131) |
