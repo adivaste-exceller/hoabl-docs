@@ -32,6 +32,10 @@ const NODE_WIDTH = 270;
 const HEADER_HEIGHT = 38;
 const ROW_HEIGHT = 26;
 const NODE_PADDING = 6;
+const FOOTER_HEIGHT = 28;
+/** Rows shown before a table is expanded, and the most rows an expanded table shows before it scrolls. */
+const FIELD_CAP = 8;
+const EXPANDED_MAX_ROWS = 14;
 
 const MODES: { value: ColumnMode; label: string }[] = [
   { value: 'all', label: 'All columns' },
@@ -39,20 +43,43 @@ const MODES: { value: ColumnMode; label: string }[] = [
   { value: 'none', label: 'Tables' },
 ];
 
-function visibleColumns(entity: Entity, mode: ColumnMode): Column[] {
-  if (mode === 'none') return [];
-  if (mode === 'keys') return entity.columns.filter((c) => c.pk || c.fk);
-  return entity.columns;
+/** Primary keys and foreign keys that point at another table in the diagram. */
+function isRelevantKey(column: Column, names: Set<string>) {
+  return column.pk || (column.fk !== undefined && names.has(column.fk.table));
 }
 
-function nodeHeight(entity: Entity, mode: ColumnMode) {
-  const rows = visibleColumns(entity, mode).length;
-  return HEADER_HEIGHT + (rows > 0 ? rows * ROW_HEIGHT + NODE_PADDING * 2 : 0);
+/** Keys first, so relation handles stay at the top of a table however many fields it has. */
+function orderedColumns(entity: Entity, names: Set<string>): Column[] {
+  const keys = entity.columns.filter((c) => isRelevantKey(c, names));
+  return [...keys, ...entity.columns.filter((c) => !isRelevantKey(c, names))];
+}
+
+function visibleColumns(entity: Entity, mode: ColumnMode, names: Set<string>, expanded: boolean): Column[] {
+  if (mode === 'none') return [];
+  const ordered = orderedColumns(entity, names);
+  if (mode === 'keys') return ordered.filter((c) => isRelevantKey(c, names));
+  if (expanded) return ordered;
+  const keyCount = ordered.filter((c) => isRelevantKey(c, names)).length;
+  return ordered.slice(0, Math.max(FIELD_CAP, keyCount));
+}
+
+/** Whether the table has more fields than the collapsed view shows. */
+function canExpand(entity: Entity, mode: ColumnMode, names: Set<string>) {
+  return mode === 'all' && entity.columns.length > visibleColumns(entity, mode, names, false).length;
+}
+
+function nodeHeight(entity: Entity, mode: ColumnMode, names: Set<string>, expanded: boolean) {
+  const shown = visibleColumns(entity, mode, names, expanded).length;
+  if (shown === 0) return HEADER_HEIGHT;
+  const rows = expanded ? Math.min(shown, EXPANDED_MAX_ROWS) : shown;
+  const footer = canExpand(entity, mode, names) ? FOOTER_HEIGHT : 0;
+  return HEADER_HEIGHT + rows * ROW_HEIGHT + NODE_PADDING * 2 + footer;
 }
 
 const elk = new ELK();
 
-async function computeLayout(entities: Entity[], relations: Relation[], mode: ColumnMode) {
+async function computeLayout(entities: Entity[], relations: Relation[], mode: ColumnMode, expanded: Set<string>) {
+  const names = new Set(entities.map((e) => e.name));
   const graph = await elk.layout({
     id: 'root',
     layoutOptions: {
@@ -63,8 +90,11 @@ async function computeLayout(entities: Entity[], relations: Relation[], mode: Co
       'elk.layered.nodePlacement.strategy': 'NETWORK_SIMPLEX',
       'elk.layered.crossingMinimization.strategy': 'LAYER_SWEEP',
       'elk.separateConnectedComponents': 'true',
+      'elk.spacing.componentComponent': '72',
+      'elk.aspectRatio': '1.7',
+      'elk.layered.nodePlacement.favorStraightEdges': 'true',
     },
-    children: entities.map((e) => ({ id: e.name, width: NODE_WIDTH, height: nodeHeight(e, mode) })),
+    children: entities.map((e) => ({ id: e.name, width: NODE_WIDTH, height: nodeHeight(e, mode, names, expanded.has(e.name)) })),
     edges: relations.map((r) => ({ id: r.id, sources: [r.source], targets: [r.target] })),
   });
 
@@ -95,6 +125,10 @@ interface TableNodeData extends Record<string, unknown> {
   selected: boolean;
   /** Column names that take part in a relation of the focused table. */
   activeColumns: string[];
+  /** Names of every table in the diagram, used to tell relation keys from other lookups. */
+  names: Set<string>;
+  expanded: boolean;
+  onToggleExpanded: (name: string) => void;
 }
 
 type TableNode = Node<TableNodeData, 'table'>;
@@ -206,8 +240,10 @@ function ColumnRow({ column, color, active }: { column: Column; color: string; a
 }
 
 function TableNodeView({ data }: NodeProps<TableNode>) {
-  const { entity, color, groupLabel, mode, dimmed, selected, activeColumns } = data;
-  const columns = visibleColumns(entity, mode);
+  const { entity, color, groupLabel, mode, dimmed, selected, activeColumns, names, expanded, onToggleExpanded } = data;
+  const columns = visibleColumns(entity, mode, names, expanded);
+  const hiddenCount = entity.columns.length - visibleColumns(entity, mode, names, false).length;
+  const canToggle = canExpand(entity, mode, names);
   const header = useHoverTip(<EntityTip entity={entity} groupLabel={groupLabel} />);
 
   return (
@@ -232,16 +268,35 @@ function TableNodeView({ data }: NodeProps<TableNode>) {
       </div>
 
       {columns.length > 0 && (
-        <ul style={{ padding: NODE_PADDING }}>
+        <ul
+          style={{ padding: NODE_PADDING, ...(expanded ? { maxHeight: EXPANDED_MAX_ROWS * ROW_HEIGHT + NODE_PADDING * 2 } : {}) }}
+          className={cn(expanded && 'nodrag nowheel overflow-y-auto')}
+        >
           {columns.map((column) => (
             <ColumnRow key={column.name} column={column} color={color} active={activeColumns.includes(column.name)} />
           ))}
         </ul>
       )}
 
+      {canToggle && (
+        <button
+          type="button"
+          onClick={(event) => {
+            event.stopPropagation();
+            onToggleExpanded(entity.name);
+          }}
+          className="nodrag flex w-full items-center justify-center border-t border-fd-border text-[11px] font-medium text-fd-muted-foreground hover:bg-fd-accent hover:text-fd-foreground"
+          style={{ height: FOOTER_HEIGHT }}
+        >
+          {expanded ? 'Show fewer fields' : `View all ${entity.columns.length} fields (+${hiddenCount})`}
+        </button>
+      )}
+
       {/* Tables-only mode has no rows, so edges attach to the header instead. */}
       {columns.length === 0 &&
-        entity.columns.map((column) => (
+        entity.columns
+          .filter((column) => isRelevantKey(column, names))
+          .map((column) => (
           <span key={column.name}>
             <Handle
               id={`${column.name}-l`}
@@ -276,6 +331,8 @@ function Canvas({ schema, height }: { schema: ModuleSchema; height: number }) {
   const [query, setQuery] = useState('');
   const [fullscreen, setFullscreen] = useState(false);
   const [layoutRun, setLayoutRun] = useState(0);
+  const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  const refit = useRef(true);
   const [positions, setPositions] = useState<Map<string, { x: number; y: number }>>(new Map());
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -288,15 +345,28 @@ function Canvas({ schema, height }: { schema: ModuleSchema; height: number }) {
   // Re-run the layout only when the set of tables or their height changes, not on selection.
   useEffect(() => {
     let cancelled = false;
-    computeLayout(entities, relations, mode).then((next) => {
+    computeLayout(entities, relations, mode, expanded).then((next) => {
       if (cancelled) return;
       setPositions(next);
-      requestAnimationFrame(() => flow.fitView({ duration: 400, padding: 0.12 }));
+      // Expanding a table re-flows the layout but should not move the camera.
+      if (refit.current) requestAnimationFrame(() => flow.fitView({ duration: 400, padding: 0.12 }));
+      refit.current = true;
     });
     return () => {
       cancelled = true;
     };
-  }, [entities, relations, mode, flow, layoutRun]);
+  }, [entities, relations, mode, flow, layoutRun, expanded]);
+
+  const toggleExpanded = useCallback((name: string) => {
+    refit.current = false;
+    setExpanded((prev) => {
+      const next = new Set(prev);
+      if (!next.delete(name)) next.add(name);
+      return next;
+    });
+  }, []);
+
+  const entityNames = useMemo(() => new Set(entities.map((e) => e.name)), [entities]);
 
   // Keep dragged positions in state, otherwise the derived nodes snap back on the next render.
   const onNodesChange = useCallback((changes: NodeChange<TableNode>[]) => {
@@ -348,10 +418,13 @@ function Canvas({ schema, height }: { schema: ModuleSchema; height: number }) {
               dimmed: neighbours ? !neighbours.has(entity.name) : false,
               selected: selected === entity.name,
               activeColumns,
+              names: entityNames,
+              expanded: expanded.has(entity.name),
+              onToggleExpanded: toggleExpanded,
             },
           };
         }),
-    [entities, positions, schema.groups, mode, selected, neighbours, relations],
+    [entities, positions, schema.groups, mode, selected, neighbours, relations, entityNames, expanded, toggleExpanded],
   );
 
   const edges = useMemo<Edge[]>(
