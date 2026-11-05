@@ -1,0 +1,211 @@
+---
+title: Sales
+description: Leads, opportunities, applications, bookings, pricing and receipts.
+icon: TrendingUp
+---
+
+<Section open>
+
+## Overview
+
+This page documents the 48 objects and 164 Apex classes used by the Sales module.
+
+<Callout type="info" title="Reading the diagram">
+  Colors match the groups in the legend. Standard objects such as Account and Lead list their custom fields only.
+  Each object shows its key fields first. Use **View all** on an object to see every field.
+</Callout>
+
+</Section>
+
+## ER diagram
+
+<ERDiagram module="sales" height={780} />
+
+<Section>
+
+## Objects
+
+<EntityOverview module="sales" />
+
+</Section>
+
+<Section>
+
+## Field reference
+
+<SchemaTables module="sales" />
+
+</Section>
+
+<Section>
+
+## Apex classes
+
+| Class |
+| --- |
+| `Ex_AccountHandlerServices` |
+| `Ex_AccountService` |
+| `Ex_AccountTriggerHandler` |
+| `Ex_AOP_Channel_PartnerTriggerHandler` |
+| `Ex_AOP_CPPOManagementServices` |
+| `Ex_AOPBrokerageCreationDashboard` |
+| `Ex_ApexSharingManagementServices` |
+| `Ex_ApplicantBookingFormController` |
+| `Ex_ApplicantTriggerHandler` |
+| `Ex_ApplicationAcknowdgeFormController` |
+| `EX_ApplicationAckowledgementController` |
+| `Ex_ApplicationCancellationCaseController` |
+| `Ex_ApplicationCancelMessagingBatch` |
+| `Ex_ApplicationCancelMessagingHandler` |
+| `Ex_ApplicationDashboardController` |
+| `Ex_ApplicationFormController` |
+| `Ex_ApplicationHandlerServices` |
+| `Ex_ApplicationSiteController` |
+| `Ex_ApplicationTriggerHandler` |
+| `Ex_ApproveRejectEmailNotification` |
+| `Ex_AttendanceRegulator` |
+| `Ex_AwekeningFormController` |
+| `Ex_bookingCancellationController` |
+| `Ex_BookingHandlerServices` |
+| `Ex_BookingTriggerHandler` |
+| `Ex_BudgetApprovalControllerNew` |
+| `Ex_BudgetHeadHandlerServices` |
+| `Ex_BudgetHeadTriggerHandler` |
+| `Ex_BudgetTransferController` |
+| `Ex_CallDispositionController` |
+| `Ex_CaseHandlerServices` |
+| `Ex_CaseTriggerHandler` |
+| `Ex_ChannelPartnerHandlerServices` |
+| `Ex_ChannelPartnerTriggerHandler` |
+| `Ex_ChargeDetailsTriggerHandler` |
+| `Ex_ClickToCallController` |
+| `Ex_CompanyBankAccountHandlerServices` |
+| `Ex_CompanyBankAccountTriggerHandler` |
+| `Ex_ConcurrentReferralController` |
+| `Ex_ContactHandlerServices` |
+| `Ex_ContactTriggerHandler` |
+| `Ex_CPLaunchHandlerServices` |
+| `Ex_CPLaunchTriggerHandler` |
+| `Ex_CreateEReceiptController` |
+| `Ex_CustomActivitiesController` |
+| `ex_customTaskController` |
+| `Ex_DigitalLeadHandlerServices` |
+| `Ex_DigitalLeadTriggerHandler` |
+| `Ex_DigitalOpportunityCreation` |
+| `Ex_DirectOpportunityCreation` |
+| `Ex_DiscountAppliedTriggerHandler` |
+| `Ex_EasebuzzAPIService` |
+| `Ex_EasebuzzEasyCollectRequest` |
+| `Ex_EditQuotation` |
+| `Ex_EndMeetingModalController` |
+| `Ex_eReceiptHandler` |
+| `Ex_EssentialDetailsPendingReminder` |
+| `Ex_EventHandlerServices` |
+| `Ex_EventTriggerHandler` |
+| `Ex_ExtendValidityonOpportunity` |
+| `Ex_GenerateQuotation` |
+| `Ex_getAllAccountDetails` |
+| `Ex_getAllPropertTypeDetails` |
+| `Ex_getAllRERAPhaseDetails` |
+| `Ex_getPropertyType` |
+| `Ex_GoogleMapsController` |
+| `Ex_GoogleOAuthIntegration` |
+| `Ex_GoogleOAuthIntegrationWithOtp` |
+| `Ex_IncentiveManagementServices` |
+| `Ex_INFormat` |
+| `Ex_InventoryPriceManagementServices` |
+| `Ex_LaunchService` |
+| `Ex_LaunchTriggerHandler` |
+| `Ex_LeadConversion` |
+| `Ex_LeadHandlerServices` |
+| `Ex_leadSummaryController` |
+| `Ex_LeadTriggerHandler` |
+| `Ex_LeadUploadExecutionBatch` |
+| `Ex_LeadUploadManagementServices` |
+| `Ex_LeadUploadTriggerHandler` |
+| `Ex_LeadValidityExpiryBatch` |
+| `Ex_managePaymentSchemeController` |
+| `Ex_MeetingDespositionforCP` |
+| `Ex_MeetingEventController` |
+| `Ex_MeetingHandlerServices` |
+| `ex_MeetingOTPVerifyController` |
+| `Ex_MeetingTriggerHandler` |
+| `Ex_NumberToWordsConverter` |
+| `Ex_OppCreationForVCCustomers` |
+| `Ex_OpportunityHandlerServices` |
+| `Ex_OpportunityTriggerHandler` |
+| `Ex_PaymentEReceiptController` |
+| `Ex_PaymentLinkLogController` |
+| `Ex_PaymentMilestoneTriggerHandler` |
+| `Ex_PrebookingCancellationController` |
+| `Ex_PrintPaymentReceipt1Controller` |
+| `Ex_PrintPaymentReceiptController` |
+| `Ex_PrintQuotationController` |
+| `Ex_PrintQuotationNewViewController` |
+| `Ex_PrintQuotationResidentialController` |
+| `Ex_PrintReceiptController` |
+| `Ex_ProcessHandlerServices` |
+| `Ex_ProcessTriggerHandler` |
+| `Ex_ProjectHandlerServices` |
+| `Ex_ProjectService` |
+| `Ex_ProjectTriggerHandler` |
+| `Ex_PropertyFinalizingController` |
+| `Ex_PropertyHandlerServices` |
+| `Ex_PropertySelectionDashboard` |
+| `Ex_PropertyShorlistingController` |
+| `Ex_PropertyTriggerHandler` |
+| `Ex_PropertyTypeChargesHandlerServices` |
+| `Ex_PropertyTypeChargesTriggerHandler` |
+| `Ex_PropertyTypeServices` |
+| `Ex_PropertyTypetriggerHandler` |
+| `Ex_QRLaunchController` |
+| `Ex_QuotationApprovalAttachmentController` |
+| `Ex_QuotationHandlerService` |
+| `Ex_QuotationTriggerHandler` |
+| `Ex_ReceiptApprovalDashboard` |
+| `Ex_ReceiptCreationController` |
+| `Ex_ReceiptHandlerServices` |
+| `Ex_ReceiptTriggerHandler` |
+| `Ex_ReceiptViewDashboard` |
+| `Ex_ReferralAndEnquiryFormController` |
+| `Ex_RefundHandlerServices` |
+| `Ex_RefundTriggerHandler` |
+| `Ex_RestAccountService` |
+| `Ex_RestAccountUpdateService` |
+| `Ex_RestCreateTask` |
+| `Ex_RESTCTILeadIntegration` |
+| `Ex_RestCTILeadUpdateService` |
+| `Ex_RESTCustomerIdentityAPI` |
+| `Ex_RestEReceiptAPI` |
+| `Ex_RestGetAccountDetails` |
+| `Ex_RestGetAgentAPI` |
+| `Ex_RestGetAllLauchDetails` |
+| `Ex_RestGetAllProjectDetails` |
+| `Ex_RestGetLaunchDetails` |
+| `Ex_RestGetProjectDetails` |
+| `Ex_RestTaskDispositionAPI` |
+| `Ex_RESTWebIntegration` |
+| `Ex_SendAcknowledgementEmailController` |
+| `Ex_SendAcknowledgementLetter` |
+| `Ex_SendApplicationAcknowledgementEmail` |
+| `Ex_SendQuotationToCustomer` |
+| `Ex_SHA512HashFunction` |
+| `Ex_spendHandlerServices` |
+| `ex_TaskCreationController` |
+| `Ex_TaskHandlerServices` |
+| `Ex_TaskTriggerHandler` |
+| `Ex_TeamMemberHandlerServices` |
+| `Ex_TeamMemberTriggerHandler` |
+| `Ex_TOTPGenerator` |
+| `Ex_updateEmailonAccount` |
+| `Ex_VCAssignmentDashboard` |
+| `Ex_VideoCallHandlerServices` |
+| `Ex_VideoCallTriggerHandler` |
+| `Ex_ViewOnAccountMoneyReceiptController` |
+| `Ex_ViewReceiptController` |
+| `Ex_WebhookHandlerServices` |
+| `Ex_WordDocumentPreviewController` |
+| `ExCustomer360ProfileController` |
+| `ForgotPasswordController` |
+
+</Section>

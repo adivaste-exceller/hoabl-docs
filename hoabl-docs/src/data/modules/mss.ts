@@ -1,0 +1,51 @@
+import type { ModuleSchema } from '@/lib/erd/types';
+import { hoablObjects } from '../objects/hoabl-objects';
+
+const entity = (name: string, group: string) => ({ ...hoablObjects[name], group });
+
+export const mss = {
+  slug: 'mss',
+  title: 'MSS',
+  groups: {
+    marketing: { label: "Marketing", color: '#2563eb' },
+    pricing: { label: "Pricing & Payment Plans", color: '#7c3aed' },
+    inventory: { label: "Projects & Inventory", color: '#059669' },
+    banks: { label: "Banks & Partners", color: '#ea580c' },
+    teams: { label: "Teams & Processes", color: '#db2777' },
+  },
+  entities: [
+    entity('Campaign', 'marketing'),
+    entity('Campaign_Performance__c', 'marketing'),
+    entity('Digital_Lead__c', 'marketing'),
+    entity('Incentive__c', 'marketing'),
+    entity('Form_Questions__c', 'marketing'),
+    entity('Document_Template__c', 'marketing'),
+    entity('Integration_Log__c', 'marketing'),
+    entity('Payment_Scheme__c', 'pricing'),
+    entity('Payment_Scheme_Milestone__c', 'pricing'),
+    entity('Payment_Scheme_Milestone_Charge__c', 'pricing'),
+    entity('Payment_Milestone__c', 'pricing'),
+    entity('Payment_Milestone_Charge__c', 'pricing'),
+    entity('Charge_Detail__c', 'pricing'),
+    entity('Property_Type__c', 'pricing'),
+    entity('Property_Type_Charge__c', 'pricing'),
+    entity('Pricing_List__c', 'pricing'),
+    entity('Discount__c', 'pricing'),
+    entity('Project__c', 'inventory'),
+    entity('Launch__c', 'inventory'),
+    entity('Launch_Property__c', 'inventory'),
+    entity('Phase__c', 'inventory'),
+    entity('RERA_Phase__c', 'inventory'),
+    entity('Wing__c', 'inventory'),
+    entity('Tower__c', 'inventory'),
+    entity('Property__c', 'inventory'),
+    entity('Postal_Code__c', 'inventory'),
+    entity('Bank__c', 'banks'),
+    entity('Bank_APFs__c', 'banks'),
+    entity('Case', 'banks'),
+    entity('Channel_Partner__c', 'banks'),
+    entity('Process__c', 'teams'),
+    entity('Team__c', 'teams'),
+    entity('Team_Member__c', 'teams'),
+  ],
+} satisfies ModuleSchema;

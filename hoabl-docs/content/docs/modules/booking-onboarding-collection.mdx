@@ -1,0 +1,248 @@
+---
+title: Booking Onboarding & Collection
+description: Booking onboarding, demands, receipts and collections.
+icon: HandCoins
+---
+
+<Section open>
+
+## Overview
+
+This page documents the 56 objects, 129 Apex classes, 20 Lightning web components, 22 Visualforce pages and 3 flows used by the Booking Onboarding & Collection module.
+
+<Callout type="info" title="Reading the diagram">
+  Colors match the groups in the legend. Standard objects such as Account and Lead list their custom fields only.
+  Each object shows its key fields first. Use **View all** on an object to see every field.
+</Callout>
+
+</Section>
+
+## ER diagram
+
+<ERDiagram module="booking-onboarding-collection" height={780} />
+
+<Section>
+
+## Objects
+
+<EntityOverview module="booking-onboarding-collection" />
+
+</Section>
+
+<Section>
+
+## Field reference
+
+<SchemaTables module="booking-onboarding-collection" />
+
+</Section>
+
+<Section>
+
+## Apex classes
+
+| Class |
+| --- |
+| `BulkDemandsReceiptsDashboardController` |
+| `DocumentGenerationServices` |
+| `Ex_AccountHandlerServices` |
+| `Ex_AccountService` |
+| `Ex_AccountTriggerHandler` |
+| `Ex_AcknowledgementLetterDetails` |
+| `Ex_AggrravatedCustApprovalController` |
+| `Ex_ApexSharingForBooking` |
+| `Ex_ApexSharingManagementServices` |
+| `Ex_ApplicantBookingFormController` |
+| `Ex_ApplicantTriggerHandler` |
+| `Ex_ApplicantUpdationFormController` |
+| `Ex_ApplicationFormController` |
+| `Ex_ApplicationHandlerServices` |
+| `Ex_ApproveApplicantChangesController` |
+| `Ex_bookingCancellationController` |
+| `Ex_BookingHandlerServices` |
+| `Ex_BookingTriggerHandler` |
+| `Ex_BulkDocumentController` |
+| `Ex_CallDispositionController` |
+| `Ex_CaseAgeBatch` |
+| `Ex_CaseAndTaskManagement` |
+| `Ex_caseEscalationMonitorController` |
+| `Ex_CaseHandlerServices` |
+| `Ex_CaseTriggerHandler` |
+| `Ex_CemWiseReportDashboardCtrl` |
+| `Ex_ChecklistController` |
+| `Ex_ClickToCallController` |
+| `Ex_CollectionSummaryDashboardCtrl` |
+| `Ex_CompanyBankAccountHandlerServices` |
+| `Ex_CompanyBankAccountTriggerHandler` |
+| `Ex_ContactHandlerServices` |
+| `Ex_ContactTriggerHandler` |
+| `Ex_ContentDocumentLinkTriggerHandler` |
+| `Ex_CPPOHandlerServices` |
+| `Ex_CPPOManagementServices` |
+| `Ex_CreateAccountController` |
+| `Ex_CreateChildCaseController` |
+| `Ex_CreateReceiptOnBooking` |
+| `Ex_CSSMeetingTriggerHandler` |
+| `Ex_CustomActivitiesController` |
+| `Ex_CustomerServiceDashboardCtrl` |
+| `ex_customTaskController` |
+| `Ex_DemandAction` |
+| `Ex_DemandHandlerServices` |
+| `ex_DemandLegacyCustomerInteractionctrl` |
+| `Ex_DemandLetterVfController` |
+| `Ex_DemandListViewController` |
+| `Ex_DemandManagementServices` |
+| `Ex_DemandRaiseBatch` |
+| `Ex_DemandTriggerHandler` |
+| `Ex_DocumentTemplateTrigerHandler` |
+| `Ex_DuplicationHandlerServices` |
+| `Ex_EmailMessageHandlerServices` |
+| `Ex_EmailMessageTriggerHandler` |
+| `Ex_EventHandlerServices` |
+| `Ex_EventTriggerHandler` |
+| `Ex_GoogleMapsController` |
+| `Ex_GoogleOAuthIntegration` |
+| `Ex_GoogleOAuthIntegrationWithOtp` |
+| `Ex_IncentiveManagementServices` |
+| `Ex_INFormat` |
+| `Ex_InitiateBookingCancellationController` |
+| `Ex_InterestCalculateManagementServices` |
+| `Ex_InterestCalculationBatch` |
+| `Ex_InterestCalculatorController` |
+| `Ex_InterestLetter1Controller` |
+| `Ex_InterestLetter1Controller_Possession` |
+| `Ex_InterestNotice1Controller` |
+| `Ex_InterestNotice2Controller` |
+| `Ex_InterestRateHandlerServices` |
+| `Ex_InterestRateTriggerHandler` |
+| `Ex_InterestWaiverController` |
+| `Ex_InventoryPriceManagementServices` |
+| `Ex_IVRDashboard` |
+| `Ex_KycFormController` |
+| `Ex_LandGainCalculatorController` |
+| `Ex_LaunchService` |
+| `Ex_LaunchTriggerHandler` |
+| `Ex_MeetingEventController` |
+| `Ex_MeetingHandlerServices` |
+| `ex_MeetingOTPVerifyController` |
+| `Ex_MeetingTriggerHandler` |
+| `Ex_NumberToWordsConverter` |
+| `Ex_OPDocAttachment` |
+| `Ex_PossesionDemandController` |
+| `ex_PossessionDashboardController` |
+| `Ex_PreIntimationBatchClass` |
+| `Ex_PreTerminationController` |
+| `Ex_PrintPaymentReceipt1Controller` |
+| `Ex_PrintPaymentReceiptController` |
+| `Ex_PrintQuotationResidentialController` |
+| `Ex_PrintReceiptController` |
+| `Ex_ProjectHandlerServices` |
+| `Ex_ProjectService` |
+| `Ex_ProjectTriggerHandler` |
+| `Ex_PropertyTypeChargesHandlerServices` |
+| `Ex_PropertyTypeServices` |
+| `Ex_RaiseDemandForBooking` |
+| `Ex_ReceiptApportionController` |
+| `Ex_ReceiptCreationController` |
+| `Ex_ReceiptHandlerServices` |
+| `Ex_ReceiptTriggerHandler` |
+| `Ex_ReceiptViewDashboard` |
+| `Ex_ReferralAndEnquiryFormController` |
+| `Ex_RefundHandlerServices` |
+| `Ex_RefundTriggerHandler` |
+| `Ex_RegCaseStatusDashboardCtrl` |
+| `Ex_RESTCustomerIdentityAPI` |
+| `Ex_RESTIVRCaseCreationAPI` |
+| `Ex_RestIVRCreateTask` |
+| `Ex_SendInterestEmail` |
+| `Ex_SendInterestNoticeEmail` |
+| `Ex_SendIntimationEmailHandler` |
+| `Ex_SendPreIntimationLetterController` |
+| `Ex_SendPreIntimationLetterControllerPM` |
+| `Ex_SendReceiptToCustomer` |
+| `Ex_SendRegistrationEmailController` |
+| `Ex_SendWelcomeEmailController` |
+| `Ex_TaskHandlerServices` |
+| `Ex_TaskTriggerHandler` |
+| `Ex_TeamMemberHandlerServices` |
+| `Ex_TeamMemberTriggerHandler` |
+| `Ex_UnitInventoryStatusDashboardCtrl` |
+| `Ex_UpdateBookingOnCaseController` |
+| `EX_WelcomeCallChecklistController` |
+| `Ex_WelcomeCallStatusDashboardCtrl` |
+| `Ex_WelcomeEmail` |
+| `Ex_WordDocumentPreviewController` |
+
+</Section>
+
+<Section>
+
+## Lightning web components
+
+| Component |
+| --- |
+| `ex_CSSWelcomeCallChecklist` |
+| `Ex_KycFormSite` |
+| `ex_applicantUpdationForm` |
+| `Ex_ApproveApplicantChanges` |
+| `ex_InterestWaiverDashboard` |
+| `ex_printPossessionDemand` |
+| `ex_sendPreintimationMail` |
+| `ex_LandGainCalculatorDashboard` |
+| `ex_SendInterestEmails` |
+| `ex_sendInterestNoticeEmail` |
+| `ex_sendPreTerminationLetter` |
+| `ex_sendTDSTutorialMail` |
+| `ex_sendTerminationLetter` |
+| `ex_sendWelcomeEmail` |
+| `ex_sendWelcomeEmailBeforeCss` |
+| `ex_VCForBooking` |
+| `CustomDemandListView` |
+| `Ex_customActivities` |
+| `Ex_IVRDashboard` |
+| `PtpDashboard` |
+
+</Section>
+
+<Section>
+
+## Visualforce pages
+
+| Page |
+| --- |
+| `CustomerPortal_WealthLedger` |
+| `Ex_AcknowledgementLetterDetails` |
+| `Ex_ApplicantBookingForm` |
+| `Ex_ApplicantUpdationForm_VF` |
+| `Ex_ApproveApplicantChanges_VF` |
+| `Ex_InterestCalculatorBookingVF` |
+| `Ex_InterestLetter1` |
+| `Ex_InternalNotice1` |
+| `Ex_InternalNotice2` |
+| `Ex_KYCFormVF` |
+| `Ex_ManualCaseCreation` |
+| `Ex_PaymentReceipt` |
+| `Ex_PaymentReceipt1` |
+| `Ex_PreTerminationletter` |
+| `EX_PrintDemandLetter` |
+| `Ex_PrintPaymentReceipt` |
+| `Ex_PrintPossesionDemand` |
+| `Ex_PrintReceipt` |
+| `Ex_StatementofAccount` |
+| `Ex_Terminationletter` |
+| `Ex_ViewOnAccountMoneyReceipt` |
+| `Ex_ViewReceipt` |
+
+</Section>
+
+<Section>
+
+## Flows
+
+| Flow |
+| --- |
+| `Update_CAM_Dates_on_Booking` |
+| `Upload_CEO_Signed_Document` |
+| `Raise_Query` |
+
+</Section>
