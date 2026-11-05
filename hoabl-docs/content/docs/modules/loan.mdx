@@ -4,26 +4,40 @@ description: Banks, loan cases and the checklists behind home loans for bookings
 icon: Landmark
 ---
 
+<Section open>
+
 ## Overview
 
 This page documents the 24 objects and 31 Apex classes used by the Loan module.
 
 <Callout type="info" title="Reading the diagram">
   Colors match the groups in the legend. Standard objects such as Account and Lead list their custom fields only.
-  Each table shows its key fields first. Use **View all** on a table to see every field.
+  Each object shows its key fields first. Use **View all** on an object to see every field.
 </Callout>
+
+</Section>
 
 ## ER diagram
 
 <ERDiagram module="loan" height={780} />
 
+<Section>
+
 ## Objects
 
 <EntityOverview module="loan" />
 
+</Section>
+
+<Section>
+
 ## Field reference
 
 <SchemaTables module="loan" />
+
+</Section>
+
+<Section>
 
 ## Apex classes
 
@@ -60,3 +74,5 @@ This page documents the 24 objects and 31 Apex classes used by the Loan module.
 | `Ex_TaskHandlerServices` |
 | `Ex_TaskTriggerHandler` |
 | `Ex_WordDocumentPreviewController` |
+
+</Section>

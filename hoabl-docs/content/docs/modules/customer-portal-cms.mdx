@@ -4,18 +4,24 @@ description: Objects behind the Customer Portal CMS admin screen and the content
 icon: PanelsTopLeft
 ---
 
+<Section open>
+
 ## Overview
 
 The CMS lets the team manage what customers see in the portal. Each tab of the admin screen maps to one group of objects, and every record hangs off a single **Portal Configuration** record. Images and documents are stored once as **File** records and referenced from everywhere else.
 
 <Callout type="info" title="Reading the diagram">
   Colors match the CMS tabs: Login, Investment &amp; RERA, Latest Updates, Latest Offerings (with the home carousel) and
-  Services. Grey tables are existing HoABL objects, included only so the relations have a target.
+  Services. Grey objects are existing HoABL objects, included only so the relations have a target.
 </Callout>
+
+</Section>
 
 ## ER diagram
 
 <ERDiagram module="customer-portal-cms" height={760} />
+
+<Section>
 
 ## Apex classes
 
@@ -37,8 +43,14 @@ The CMS lets the team manage what customers see in the portal. Each tab of the a
 | `CustomerPortal_AliasContentProvider` | Supplies the display aliases for projects and launches, used in the portal in place of the Salesforce names, with a fallback value when no alias is set. |
 | `CustomerPortal_FilePublicUrlHandler` | Called by the `CustomerPortal_FilePublicUrlTrigger` trigger when a file is attached to a File record. It picks the latest file version, creates a public distribution link, and stores the file name, size, download URL and preview URL on the File record. |
 
+</Section>
+
+<Section>
+
 ## Test coverage
 
 Coverage comes from running the five test classes below together. All tests passed.
 
 <Coverage module="customer-portal-cms" />
+
+</Section>
