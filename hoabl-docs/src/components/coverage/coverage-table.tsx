@@ -20,8 +20,6 @@ interface Row {
   testClass: string;
   coveredClass: string;
   pct: number;
-  covered?: number;
-  total?: number;
 }
 
 const LEVEL_STYLES: Record<CoverageLevel, { bar: string; text: string; dot: string }> = {
@@ -33,7 +31,7 @@ const LEVEL_STYLES: Record<CoverageLevel, { bar: string; text: string; dot: stri
 function CoverageBar({ row }: { row: Row }) {
   const styles = LEVEL_STYLES[level(row.pct)];
   return (
-    <div className="flex min-w-[210px] items-center gap-3">
+    <div className="flex min-w-[120px] items-center gap-3">
       <div
         className="h-1.5 flex-1 overflow-hidden rounded-full bg-fd-muted"
         role="progressbar"
@@ -45,23 +43,6 @@ function CoverageBar({ row }: { row: Row }) {
         <div className={cn('h-full rounded-full', styles.bar)} style={{ width: `${row.pct}%` }} />
       </div>
       <span className={cn('w-9 text-right text-xs font-semibold tabular-nums', styles.text)}>{row.pct}%</span>
-      {row.total !== undefined && (
-        <span className="w-[68px] text-right font-mono text-[11px] tabular-nums text-fd-muted-foreground">
-          {row.covered}/{row.total}
-        </span>
-      )}
-    </div>
-  );
-}
-
-function Stat({ label, value, hint }: { label: string; value: string; hint?: string }) {
-  return (
-    <div className="rounded-lg border border-fd-border bg-fd-card px-3.5 py-2.5">
-      <div className="text-[11px] font-medium uppercase tracking-wide text-fd-muted-foreground">{label}</div>
-      <div className="mt-0.5 flex items-baseline gap-1.5">
-        <span className="text-xl font-semibold tabular-nums">{value}</span>
-        {hint && <span className="text-xs text-fd-muted-foreground">{hint}</span>}
-      </div>
     </div>
   );
 }
@@ -151,8 +132,6 @@ export function CoverageTable({ dataset }: { dataset: CoverageDataset }) {
           testClass: item.testClass,
           coveredClass: cls.name,
           pct: percent(cls),
-          covered: cls.covered,
-          total: cls.total,
         })),
       ),
     [dataset],
@@ -209,17 +188,6 @@ export function CoverageTable({ dataset }: { dataset: CoverageDataset }) {
     }
   }
 
-  // Overall coverage is weighted by lines when we have them, otherwise a plain average.
-  const hasLines = allRows.every((r) => r.total !== undefined);
-  const overall = hasLines
-    ? Math.round(
-        (allRows.reduce((s, r) => s + (r.covered ?? 0), 0) / Math.max(1, allRows.reduce((s, r) => s + (r.total ?? 0), 0))) * 100,
-      )
-    : Math.round(allRows.reduce((s, r) => s + r.pct, 0) / Math.max(1, allRows.length));
-  const belowGood = allRows.filter((r) => r.pct < GOOD_THRESHOLD).length;
-  const belowFair = allRows.filter((r) => r.pct < FAIR_THRESHOLD).length;
-  const testClassCount = new Set(allRows.map((r) => r.testClass)).size;
-
   const sortProps = { sortField, sortDir, onSort: toggleSort };
 
   const renderRow = (row: Row, leading?: React.ReactNode) => (
@@ -236,13 +204,6 @@ export function CoverageTable({ dataset }: { dataset: CoverageDataset }) {
 
   return (
     <div className="not-prose my-6 space-y-3">
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-        <Stat label="Overall" value={`${overall}%`} hint={hasLines ? 'by lines' : 'average'} />
-        <Stat label="Classes" value={String(allRows.length)} />
-        <Stat label="Test classes" value={String(testClassCount)} />
-        <Stat label={`Under ${GOOD_THRESHOLD}%`} value={String(belowGood)} hint={belowFair > 0 ? `${belowFair} under ${FAIR_THRESHOLD}%` : undefined} />
-      </div>
-
       <div className="flex flex-wrap items-center gap-2">
         <div className="relative min-w-[200px] flex-1">
           <Search className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-fd-muted-foreground" />
@@ -318,8 +279,7 @@ export function CoverageTable({ dataset }: { dataset: CoverageDataset }) {
                       <td rowSpan={group.rows.length} className="border-r border-fd-border px-4 py-2.5 align-top">
                         <code className={cellCode}>{group.testClass}</code>
                         <div className="mt-1.5 text-[11px] text-fd-muted-foreground">
-                          {group.rows.length} {group.rows.length === 1 ? 'class' : 'classes'} · avg {group.average}%
-                        </div>
+                          {group.rows.length} {group.rows.length === 1 ? 'class' : 'classes'}                        </div>
                       </td>
                     ),
                   ),

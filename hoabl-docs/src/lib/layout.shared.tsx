@@ -1,5 +1,5 @@
 import type { BaseLayoutProps } from 'fumadocs-ui/layouts/shared';
-import { BookOpen, GitFork } from 'lucide-react';
+import { BookOpen } from 'lucide-react';
 import Image from 'next/image';
 import { gitConfig } from './shared';
 
@@ -28,7 +28,6 @@ export function baseOptions(): BaseLayoutProps {
     },
     links: [
       { icon: <BookOpen />, text: 'Documentation', url: '/docs', active: 'nested-url' },
-      { icon: <GitFork />, text: 'Booking ERD', url: '/docs/modules/booking' },
     ],
     githubUrl: `https://github.com/${gitConfig.user}/${gitConfig.repo}`,
   };

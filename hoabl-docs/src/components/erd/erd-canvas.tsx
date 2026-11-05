@@ -38,9 +38,9 @@ const FIELD_CAP = 8;
 const EXPANDED_MAX_ROWS = 14;
 
 const MODES: { value: ColumnMode; label: string }[] = [
-  { value: 'all', label: 'All columns' },
+  { value: 'all', label: 'All fields' },
   { value: 'keys', label: 'Keys' },
-  { value: 'none', label: 'Tables' },
+  { value: 'none', label: 'Objects' },
 ];
 
 /** Primary keys and foreign keys that point at another table in the diagram. */
@@ -536,7 +536,7 @@ function Canvas({ schema, height }: { schema: ModuleSchema; height: number }) {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && matches[0] && focusTable(matches[0].name)}
-              placeholder="Find a table…"
+              placeholder="Find an object…"
               className="h-8 w-full rounded-md border border-fd-border bg-fd-card pl-8 pr-2 font-sans text-xs outline-none focus:ring-2 focus:ring-fd-ring"
             />
             {matches.length > 0 && (

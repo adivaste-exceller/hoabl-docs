@@ -61,6 +61,13 @@ html > body[data-scroll-locked] {
   border-radius: 0.375rem;
 }
 
+/* The sidebar scroller clips outside outlines, so draw the focus ring inside the item. */
+#nd-sidebar a:focus-visible,
+#nd-sidebar button[aria-expanded]:focus-visible {
+  outline: 1.5px solid var(--color-fd-ring);
+  outline-offset: -1.5px;
+}
+
 #nd-sidebar a[data-active='true'] {
   font-weight: 500;
 }

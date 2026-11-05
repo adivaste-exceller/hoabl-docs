@@ -10,9 +10,9 @@ export function EntityOverview({ module }: { module: string }) {
       <table>
         <thead>
           <tr>
-            <th>Table</th>
+            <th className="w-[20%] min-w-[180px]">Object</th>
             <th>Group</th>
-            <th>Columns</th>
+            <th>Fields</th>
             <th>Description</th>
           </tr>
         </thead>
@@ -20,7 +20,7 @@ export function EntityOverview({ module }: { module: string }) {
           {schema.entities.map((entity) => (
             <tr key={entity.name}>
               <td>
-                <a href={`#${entity.name}`}>
+                <a className="decoration-dashed decoration-1 decoration-current/70 underline-offset-4" href={`#${entity.name}`}>
                   {entity.label ?? <code>{entity.name}</code>}
                 </a>
               </td>
@@ -52,24 +52,26 @@ export function SchemaTables({ module }: { module: string }) {
         const incoming = relations.filter((r) => r.target === entity.name);
         return (
           <section key={entity.name} id={entity.name} className="scroll-mt-24">
-            <div className="mb-1 flex items-center gap-2">
-              <span className="size-2.5 rounded-full" style={{ background: schema.groups[entity.group]?.color }} />
-              <h3 className="m-0 text-lg font-semibold">{entity.label ?? entity.name}</h3>
-              {entity.label && <code className="text-xs">{entity.name}</code>}
+            <div className="not-prose mb-1 flex items-center gap-2">
+              <span className="size-2.5 shrink-0 rounded-full" style={{ background: schema.groups[entity.group]?.color }} />
+              <h3 className="m-0 text-lg font-semibold leading-tight">{entity.label ?? entity.name}</h3>
+              {entity.label && entity.label !== entity.name && (
+                <code className="rounded bg-fd-muted px-1.5 py-0.5 font-mono text-xs leading-none">{entity.name}</code>
+              )}
             </div>
             {entity.description && <p className="mb-3 mt-1 text-fd-muted-foreground">{entity.description}</p>}
 
             <FieldTable columns={entity.columns} />
 
             {(outgoing.length > 0 || incoming.length > 0) && (
-              <p className="mt-3 text-sm text-fd-muted-foreground">
+              <p className="mt-3 text-sm leading-6 text-fd-muted-foreground [&_code]:py-0">
                 {outgoing.length > 0 && (
                   <>
                     Belongs to{' '}
                     {outgoing.map((r, i) => (
                       <span key={r.id}>
                         {i > 0 && ', '}
-                        <a href={`#${r.target}`}>
+                        <a className="decoration-dashed decoration-1 decoration-current/70 underline-offset-4" href={`#${r.target}`}>
                           <code>{r.target}</code>
                         </a>{' '}
                         ({r.cardinality})
@@ -84,7 +86,7 @@ export function SchemaTables({ module }: { module: string }) {
                     {[...new Set(incoming.map((r) => r.source))].map((name, i) => (
                       <span key={name}>
                         {i > 0 && ', '}
-                        <a href={`#${name}`}>
+                        <a className="decoration-dashed decoration-1 decoration-current/70 underline-offset-4" href={`#${name}`}>
                           <code>{name}</code>
                         </a>
                       </span>

@@ -5,6 +5,7 @@ import { Callout } from '@/components/callout';
 import { Coverage } from '@/components/coverage/coverage';
 import { ERDiagram } from '@/components/erd/erd-diagram';
 import { EntityOverview, SchemaTables } from '@/components/erd/schema-tables';
+import { Section } from '@/components/section';
 
 export function getMDXComponents(components?: MDXComponents) {
   return {
@@ -16,6 +17,7 @@ export function getMDXComponents(components?: MDXComponents) {
     ERDiagram,
     EntityOverview,
     SchemaTables,
+    Section,
     ...components,
   } satisfies MDXComponents;
 }
