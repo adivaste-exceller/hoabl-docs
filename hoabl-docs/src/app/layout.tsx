@@ -16,7 +16,7 @@ export default function Layout({ children }: LayoutProps<'/'>) {
   return (
     <html lang="en" className={`${inter.variable} ${geistMono.variable}`} suppressHydrationWarning>
       <body className="flex flex-col min-h-screen font-sans">
-        <RootProvider>{children}</RootProvider>
+        <RootProvider search={{ enabled: process.env.STATIC_EXPORT !== 'true' }}>{children}</RootProvider>
       </body>
     </html>
   );
