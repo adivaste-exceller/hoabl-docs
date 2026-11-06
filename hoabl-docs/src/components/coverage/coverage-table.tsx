@@ -3,48 +3,14 @@
 import { ChevronDown, ChevronsUpDown, ChevronUp, Search, X } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { cn } from '@/lib/cn';
-import {
-  FAIR_THRESHOLD,
-  GOOD_THRESHOLD,
-  level,
-  percent,
-  type CoverageDataset,
-  type CoverageLevel,
-} from '@/lib/coverage';
+import { type CoverageDataset } from '@/lib/coverage';
 
-type SortField = 'testClass' | 'coveredClass' | 'coverage';
+type SortField = 'testClass' | 'coveredClass';
 type SortDir = 'asc' | 'desc';
-type RowFilter = 'all' | CoverageLevel;
 
 interface Row {
   testClass: string;
   coveredClass: string;
-  pct: number;
-}
-
-const LEVEL_STYLES: Record<CoverageLevel, { bar: string; text: string; dot: string }> = {
-  good: { bar: 'bg-emerald-500', text: 'text-emerald-700 dark:text-emerald-400', dot: 'bg-emerald-500' },
-  fair: { bar: 'bg-amber-500', text: 'text-amber-700 dark:text-amber-400', dot: 'bg-amber-500' },
-  low: { bar: 'bg-red-500', text: 'text-red-700 dark:text-red-400', dot: 'bg-red-500' },
-};
-
-function CoverageBar({ row }: { row: Row }) {
-  const styles = LEVEL_STYLES[level(row.pct)];
-  return (
-    <div className="flex min-w-[120px] items-center gap-3">
-      <div
-        className="h-1.5 flex-1 overflow-hidden rounded-full bg-fd-muted"
-        role="progressbar"
-        aria-valuenow={row.pct}
-        aria-valuemin={0}
-        aria-valuemax={100}
-        aria-label={`${row.coveredClass} coverage`}
-      >
-        <div className={cn('h-full rounded-full', styles.bar)} style={{ width: `${row.pct}%` }} />
-      </div>
-      <span className={cn('w-9 text-right text-xs font-semibold tabular-nums', styles.text)}>{row.pct}%</span>
-    </div>
-  );
 }
 
 function Segmented<T extends string>({
@@ -123,7 +89,6 @@ export function CoverageTable({ dataset }: { dataset: CoverageDataset }) {
   const [sortField, setSortField] = useState<SortField>('testClass');
   const [sortDir, setSortDir] = useState<SortDir>('asc');
   const [grouped, setGrouped] = useState(false);
-  const [rowFilter, setRowFilter] = useState<RowFilter>('all');
 
   const allRows = useMemo<Row[]>(
     () =>
@@ -131,7 +96,6 @@ export function CoverageTable({ dataset }: { dataset: CoverageDataset }) {
         item.coveredClasses.map((cls) => ({
           testClass: item.testClass,
           coveredClass: cls.name,
-          pct: percent(cls),
         })),
       ),
     [dataset],
@@ -139,20 +103,16 @@ export function CoverageTable({ dataset }: { dataset: CoverageDataset }) {
 
   const visible = useMemo(() => {
     const q = search.trim().toLowerCase();
-    return allRows.filter(
-      (r) =>
-        (rowFilter === 'all' || level(r.pct) === rowFilter) &&
-        (!q || r.testClass.toLowerCase().includes(q) || r.coveredClass.toLowerCase().includes(q)),
-    );
-  }, [allRows, search, rowFilter]);
+    return allRows.filter((r) => !q || r.testClass.toLowerCase().includes(q) || r.coveredClass.toLowerCase().includes(q));
+  }, [allRows, search]);
 
   const compare = useMemo(() => {
     const dir = sortDir === 'asc' ? 1 : -1;
     return (a: Row, b: Row) => {
-      let result: number;
-      if (sortField === 'coverage') result = a.pct - b.pct;
-      else if (sortField === 'testClass') result = a.testClass.localeCompare(b.testClass) || a.coveredClass.localeCompare(b.coveredClass);
-      else result = a.coveredClass.localeCompare(b.coveredClass);
+      const result =
+        sortField === 'testClass'
+          ? a.testClass.localeCompare(b.testClass) || a.coveredClass.localeCompare(b.coveredClass)
+          : a.coveredClass.localeCompare(b.coveredClass);
       return result * dir;
     };
   }, [sortField, sortDir]);
@@ -164,17 +124,14 @@ export function CoverageTable({ dataset }: { dataset: CoverageDataset }) {
     for (const row of visible) map.set(row.testClass, [...(map.get(row.testClass) ?? []), row]);
 
     const dir = sortDir === 'asc' ? 1 : -1;
-    const average = (rows: Row[]) => rows.reduce((sum, r) => sum + r.pct, 0) / rows.length;
 
     return [...map.entries()]
       .map(([testClass, rows]) => ({
         testClass,
         // Inside a group the test class is constant, so fall back to the class name.
         rows: [...rows].sort(sortField === 'testClass' ? (a, b) => a.coveredClass.localeCompare(b.coveredClass) * dir : compare),
-        average: Math.round(average(rows)),
       }))
       .sort((a, b) => {
-        if (sortField === 'coverage') return (a.average - b.average) * dir;
         if (sortField === 'coveredClass') return a.rows[0].coveredClass.localeCompare(b.rows[0].coveredClass) * dir;
         return a.testClass.localeCompare(b.testClass) * dir;
       });
@@ -184,7 +141,7 @@ export function CoverageTable({ dataset }: { dataset: CoverageDataset }) {
     if (field === sortField) setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
     else {
       setSortField(field);
-      setSortDir(field === 'coverage' ? 'desc' : 'asc');
+      setSortDir('asc');
     }
   }
 
@@ -195,9 +152,6 @@ export function CoverageTable({ dataset }: { dataset: CoverageDataset }) {
       {leading}
       <td className="px-4 py-2.5 align-middle">
         <code className="font-mono text-xs text-fd-muted-foreground">{row.coveredClass}</code>
-      </td>
-      <td className="px-4 py-2.5 align-middle">
-        <CoverageBar row={row} />
       </td>
     </tr>
   );
@@ -227,17 +181,6 @@ export function CoverageTable({ dataset }: { dataset: CoverageDataset }) {
           )}
         </div>
         <Segmented
-          label="Coverage filter"
-          value={rowFilter}
-          onChange={setRowFilter}
-          options={[
-            { value: 'all', label: 'All' },
-            { value: 'good', label: `${GOOD_THRESHOLD}+` },
-            { value: 'fair', label: `${FAIR_THRESHOLD}-${GOOD_THRESHOLD}` },
-            { value: 'low', label: `<${FAIR_THRESHOLD}` },
-          ]}
-        />
-        <Segmented
           label="Layout"
           value={grouped ? 'grouped' : 'flat'}
           onChange={(v) => setGrouped(v === 'grouped')}
@@ -254,13 +197,12 @@ export function CoverageTable({ dataset }: { dataset: CoverageDataset }) {
             <tr>
               <SortHeader field="testClass" label="Test class" {...sortProps} />
               <SortHeader field="coveredClass" label="Covered class" {...sortProps} />
-              <SortHeader field="coverage" label="Coverage" {...sortProps} />
             </tr>
           </thead>
           <tbody className="divide-y divide-fd-border">
             {visible.length === 0 ? (
               <tr>
-                <td colSpan={3} className="px-4 py-10 text-center text-sm text-fd-muted-foreground">
+                <td colSpan={2} className="px-4 py-10 text-center text-sm text-fd-muted-foreground">
                   {search ? (
                     <>
                       No classes match <span className="font-medium text-fd-foreground">“{search}”</span>
@@ -303,14 +245,6 @@ export function CoverageTable({ dataset }: { dataset: CoverageDataset }) {
         <span>
           {visible.length !== allRows.length && `Showing ${visible.length} of ${allRows.length} · `}
           Measured on {dataset.source}
-        </span>
-        <span className="flex items-center gap-3">
-          {(['good', 'fair', 'low'] as const).map((l) => (
-            <span key={l} className="inline-flex items-center gap-1.5">
-              <span className={cn('size-2 rounded-full', LEVEL_STYLES[l].dot)} />
-              {l === 'good' ? `${GOOD_THRESHOLD}%+` : l === 'fair' ? `${FAIR_THRESHOLD}–${GOOD_THRESHOLD - 1}%` : `Under ${FAIR_THRESHOLD}%`}
-            </span>
-          ))}
         </span>
       </div>
     </div>
