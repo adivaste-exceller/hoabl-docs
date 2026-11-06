@@ -2,5 +2,5 @@
   "title": "All modules",
   "icon": "LayoutGrid",
   "defaultOpen": true,
-  "pages": ["customer-portal-cms", "marketing", "presales", "loan", "mss", "finance", "sales", "booking-onboarding-collection"]
+  "pages": ["customer-portal-cms", "marketing", "presales", "loan", "mss", "finance", "sales", "booking-onboarding-collection", "cp-sourcing", "case-management", "possession", "loyalty", "booking-cancellations", "registration", "integrations"]
 }

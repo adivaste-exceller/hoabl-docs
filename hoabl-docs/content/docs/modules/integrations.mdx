@@ -1,0 +1,230 @@
+---
+title: Integrations
+description: "Every external system HoABL's Salesforce org talks to: payments, telephony, messaging, maps, marketing platforms, ERP, AI and more."
+icon: Plug
+---
+
+<Section open>
+
+## Overview
+
+This is an architecture view, not an ER diagram. It covers every external integration found in the HoABL production org &mdash; not just the three in the original component matrix &mdash; by cross-checking the Salesforce technical documentation against the org's live Remote Site Settings, Named Credentials, Connected Apps, Auth Providers, Call Centers and Email Services.
+
+<Callout type="info" title="Reading the diagram">
+  Salesforce is the hub; each integration is a spoke, grouped and colored by category. A solid arrow and solid node border means the integration is **confirmed**: a live Remote Site/Named Credential *and* a matching Apex class were both found. A dashed arrow/border means **config-only**: the connection is live in the org, but no Apex class could be tied to it by name &mdash; it may run through a Flow, a managed package, or be a newer feature not yet reflected elsewhere in the docs.
+</Callout>
+
+<Callout type="warn" title="What 'confirmed' does and doesn't mean">
+  Classification is based on matching Apex class names already captured in this repo's component matrices, plus the live org metadata fetched for this page. It is not a full static-analysis pass over all ~3,300 Apex classes in the org, so a "config-only" entry may simply have a class this method didn't catch &mdash; it isn't necessarily unused.
+</Callout>
+
+</Section>
+
+## Architecture
+
+<IntegrationDiagram height={620} />
+
+<Section>
+
+## Payments
+
+### Easebuzz &mdash; Payment Gateway
+
+Collects booking and application payments and reconciles their status back onto the Opportunity/Application.
+
+| | |
+| --- | --- |
+| **Endpoint** | easebuzz.in |
+| **Objects** | `Opportunity`, `Application__c`, `Integration_Log__c` |
+| **Config** | Custom Settings: `EasebuzzAPI__c` (Hierarchy), `Sub_Merchant_API_Details__c` &middot; Remote Sites: `Easebuzz`, `Easebuzz_Payment_Initiate_Link` &middot; CSP: `EazebuzzPaymentURL`, `EaseBuzzCheckoutAWS` |
+| **Classes** | `Ex_EasebuzzAPIService`, `Ex_EasebuzzEasyCollectRequest`, `Ex_PaymentLinkLogController`, `Ex_ApplicationSiteController` |
+
+</Section>
+
+<Section>
+
+## Telephony / CTI
+
+### Convox &mdash; CTI / Dialer / IVR
+
+Click-to-call telephony and IVR for Leads/Opportunities; call dispositions and CDR data sync back onto Task/Event.
+
+| | |
+| --- | --- |
+| **Endpoint** | Remote Sites `Convox`, `Convox_API_URL`, `Convox_Live` &middot; Call Center `ConvoxCallCenter` |
+| **Objects** | `Lead`, `Task`, `Event`, `Opportunity`, `User` |
+| **Config** | Custom Settings: `Convox_API_Details__c` (Hierarchy), `Convox_Api_Details_2__c` (List), `Convox_CRM_Fields__c` (List), `Click_To_Call_Endpoint__c` (List) &middot; Sites: `ConvoxSalesAPI`, `ConvoxCallBack` &middot; Data Cloud stream: `Convox_Combined_CDR_Report` |
+| **Classes** | `Ex_EventHandlerServices`, `Ex_EventTriggerHandler`, `Ex_TaskHandlerServices`, `Ex_ClickToCallController`, `ex_convoxtaskdisportionController`, `Ex_RestCallbakConvox`, `Ex_RestCTILeadUpdateService`, `Ex_CTILeadUploadServices`, `Ex_CTIDashboard`, `Ex_RESTCreateIVRLoanCaseAPI`, `Ex_RESTIVRCaseCreationAPI`, `Ex_RestIVRCreateTask`, `ho_RestGetCallLogs`, `ho_DataCloudAccountBatchNew` |
+
+### Nurix / Neurix &mdash; Voice-bot Dialer
+
+Pushes Lead and campaign (`Process__c`) data to an AI voice-bot dialer; results are reviewed on the Neurix dashboard.
+
+| | |
+| --- | --- |
+| **Endpoint** | Remote Site `Nurix_API` |
+| **Objects** | `Lead`, `Process__c` (`Nurix_Campaign_ID__c`) |
+| **Config** | Custom Setting: `Nurix_API_Details__c` (List) &middot; Tab: `Neurix_Dashboard` |
+| **Classes** | `Ex_CTIDashboard`, `Ex_CTILeadUploadServices` (shared with Convox) |
+
+### Arrowhead &mdash; AI Voice Agent `config-only`
+
+A live, active Remote Site Setting for `api.agent.in.arrowhead.team` exists in the org, but no Apex class in the component matrix is clearly tied to it &mdash; it may be called from a Flow, an External Service, or be a newer integration not yet reflected in the matrix.
+
+</Section>
+
+<Section>
+
+## Messaging (SMS / WhatsApp / Email)
+
+### Salesforce Marketing Cloud `config-only`
+
+The Marketing Cloud Connect managed package (`et4ae5__`) is configured with 30+ Remote Site Settings covering REST, SOAP and auth endpoints across multiple Business Units and tenants. Flows prep SFMC-formatted fields (e.g. `Update_ChannelPartner_Mobile_SFMC_Format`) and the connector syncs them for email/SMS/WhatsApp journeys &mdash; this runs through the managed package and declarative flows rather than custom Apex, so no class names apply.
+
+### WhatsApp Business API (Meta)
+
+Sends WhatsApp template messages and receives inbound chat/media via the Meta Graph API.
+
+| | |
+| --- | --- |
+| **Endpoint** | `graph.facebook.com`, `lookaside.fbsbx.com` (media) |
+| **Objects** | `Case`, `Account`, `Booking__c` |
+| **Config** | Remote Site: `Whatsapp_Media` &middot; Tab/LWC: `Whatsapp_Template_Dashboard` |
+| **Classes** | `Ex_MetaAPIHandler`, `Ex_WhatsappChatServices`, `Ex_WhatsappMsgTriggerHandler`, `SendWhatsappMessage` |
+
+### MSG91 &mdash; SMS / OTP gateway `config-only`
+
+Live Remote Site Setting for `api.msg91.com`. No Apex class was matched to it by name &mdash; OTP sending may run through `Ex_TOTPGenerator`/`Ex_GoogleOAuthIntegrationWithOtp` or a Flow callout.
+
+### Fab Media &mdash; SMS / WhatsApp gateway `config-only`
+
+A second SMS/WhatsApp vendor, live as Remote Site `Fab_Media` (`sms.fabmediatech.com`). Purpose inferred from the domain only.
+
+### Inbound Email Services
+
+Three Apex Email Services turn inbound email into Salesforce records or replies.
+
+| | |
+| --- | --- |
+| **Config** | Email Services: `EmailToCase`, `EmailToSalesforce`, `TicketReplyService` |
+| **Objects** | `Case`, `Ticket__c` |
+| **Classes** | `Ex_EmailMessageHandlerServices`, `Ex_EmailMessageTriggerHandler`, `Ex_BookingEmailReplyHandler` |
+
+</Section>
+
+<Section>
+
+## Maps & Location
+
+### Google Maps
+
+Resolves addresses and coordinates for projects, launches and field visits.
+
+| | |
+| --- | --- |
+| **Endpoint** | `maps.googleapis.com` (Remote Site: `Location`) |
+| **Objects** | `Project__c`, `Launch__c` |
+| **Classes** | `Ex_GoogleMapsController` |
+
+</Section>
+
+<Section>
+
+## Calendar & Identity
+
+### Google Calendar `config-only`
+
+OAuth Named Credential (`Google_Calendar_API`) scoped to `https://www.googleapis.com/auth/calendar` for meeting scheduling. No Apex class in the matrix was matched to it.
+
+### Google Identity (OAuth login)
+
+Used to verify Channel Partner / Contact identity during community login and OTP flows.
+
+| | |
+| --- | --- |
+| **Objects** | `Contact`, `Channel_Partner__c` |
+| **Classes** | `Ex_GoogleOAuthIntegration`, `Ex_GoogleOAuthIntegrationWithOtp` |
+
+</Section>
+
+<Section>
+
+## Marketing & Ad Platforms
+
+All four of the following are native Data Cloud / CRM Analytics connectors (declarative setup), not custom Apex &mdash; listed here so the full integration surface is visible in one place.
+
+| Platform | Config found |
+| --- | --- |
+| **Google Ads** | 8 Named Credentials for distinct Google Ads/MCC accounts (e.g. `GoogleAds_Ayodhya_MCC`) |
+| **Meta Ads** | 8 Named Credentials (`MetaAds_*`, `Meta_New`, `Meta_Source`, `metacapi__MetaGraphAPI`) &mdash; plus `Ex_MetaAPIHandler` in Apex, shared with WhatsApp |
+| **Google Analytics 4** | 3 Named Credentials (`GA4_403047013`, `GA4_Data_Cloud_Credential`, `GA4_Tableau`) |
+| **LinkedIn / Bing / TikTok / X Ads** | CRM Analytics Web Data Connector Auth Providers (`LinkedInEmiLinkedInAds`, `MicrosoftEmiBingAds`, `SalesforceEmiTikTokAds`, `TwitterEmiXAds`) |
+
+<Callout type="warn" title="Housekeeping">
+  Two Data Cloud credentials pointing at `graph.facebook.com` are named `b` and `SFTP_Source` &mdash; neither name reflects what they actually connect to. Worth renaming for anyone auditing the org later.
+</Callout>
+
+</Section>
+
+<Section>
+
+## ERP
+
+### SAP (via SAP Cloud Platform Integration) `config-only`
+
+A real SAP CPI tenant (`*.it-cpi033-rt.cfapps.eu10-005.hana.ondemand.com`) is configured as a live, active Remote Site Setting &mdash; the org's confirmed ERP integration path. No Apex class in the matrix was matched to it by name; it's likely called from a class outside the keyword scan or via a Flow HTTP callout.
+
+</Section>
+
+<Section>
+
+## AI / LLM
+
+### Groq &mdash; LLM inference `config-only`
+
+Remote Site `Groq_Test` points at `api.groq.com`. The `_Test` suffix suggests an in-progress AI feature; no production Apex class was matched.
+
+### RevSpot &mdash; AI sales/brokerage tool `config-only`
+
+`api.revspot.ai` is live as a Remote Site Setting, and the `revSpotAccountDetails` LWC on the Account page confirms it's wired into the UI. The Apex controller behind it wasn't identified by name.
+
+</Section>
+
+<Section>
+
+## Document Generation
+
+### Word-to-PDF service
+
+A custom document-conversion service, hosted at HoABL's own domain (`sfdc.hoabl.in`) and named `AwsWordToPdf` in the org (likely AWS-backed), used to generate letters and receipts as PDFs.
+
+| | |
+| --- | --- |
+| **Classes** | `DocumentGenerationServices`, `Ex_WordDocumentPreviewController` |
+
+</Section>
+
+<Section>
+
+## DevOps & Internal Tooling
+
+Supporting developer/ops integrations &mdash; not business processes, but part of the org's full integration surface:
+
+- **GitHub / Bitbucket** &mdash; Salesforce DevOps Center syncs metadata via `DEVOPS_CENTER_GITHUB`, `DEVOPS_CENTER_BITBUCKET` Auth Providers and matching Named Credentials.
+- **Confluence** &mdash; `Confluence3LOConfluence3LO` Auth Provider.
+- **EasyInsights, DBeaver (Data Cloud), Salesforce CLI, Web Integration App, CPQ Integration User** &mdash; Connected Apps for BI, direct DB access, local CLI auth, the public web-integration layer, and a CPQ integration user respectively.
+
+</Section>
+
+<Section>
+
+## Legacy / Unclear
+
+<Callout type="warn" title="Flagged for cleanup or follow-up">
+  These two Remote Site Settings are live and active in production but their current purpose couldn't be confirmed from metadata alone.
+</Callout>
+
+- **Legacy Partner API** &mdash; Remote Site `OLD_CP_Site` &rarr; `api-partners.hoabl.in:4000`. Named "OLD" in the org itself.
+- **Cross-instance Salesforce reference** &mdash; Remote Site `SFRestAPI` &rarr; `ind150.salesforce.com` (a different Salesforce pod, not this org). Could be a legacy sandbox/migration reference or a second-org integration; worth confirming with the Salesforce admin.
+
+</Section>

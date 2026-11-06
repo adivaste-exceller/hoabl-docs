@@ -7,6 +7,12 @@ import { finance } from './finance';
 import { mss } from './mss';
 import { sales } from './sales';
 import { bookingOnboardingCollection } from './booking-onboarding-collection';
+import { cpSourcing } from './cp-sourcing';
+import { caseManagement } from './case-management';
+import { possession } from './possession';
+import { loyalty } from './loyalty';
+import { bookingCancellations } from './booking-cancellations';
+import { registration } from './registration';
 
 const modules: Record<string, ModuleSchema> = {
   [customerPortalCms.slug]: customerPortalCms,
@@ -17,6 +23,12 @@ const modules: Record<string, ModuleSchema> = {
   [mss.slug]: mss,
   [sales.slug]: sales,
   [bookingOnboardingCollection.slug]: bookingOnboardingCollection,
+  [cpSourcing.slug]: cpSourcing,
+  [caseManagement.slug]: caseManagement,
+  [possession.slug]: possession,
+  [loyalty.slug]: loyalty,
+  [bookingCancellations.slug]: bookingCancellations,
+  [registration.slug]: registration,
 };
 
 export function getModule(slug: string): ModuleSchema {

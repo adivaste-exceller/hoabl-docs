@@ -41,21 +41,21 @@ This page documents the 15 objects, 13 Apex classes and 4 Lightning web componen
 
 ## Apex classes
 
-| Class |
-| --- |
-| `CampaignMetricsController` |
-| `Ex_AccountHandlerServices` |
-| `Ex_AccountService` |
-| `Ex_AccountTriggerHandler` |
-| `Ex_CampaignBatchClass` |
-| `Ex_CampaignHandlerServices` |
-| `Ex_CampaignTriggerHandler` |
-| `Ex_DigitalLeadHandlerServices` |
-| `Ex_DigitalLeadTriggerHandler` |
-| `Ex_LaunchService` |
-| `Ex_leadSummaryController` |
-| `Ex_OpportunityHandlerServices` |
-| `Ex_OpportunityTriggerHandler` |
+| Class | Description |
+| --- | --- |
+| `CampaignMetricsController` | A cacheable Aura controller that compares a Campaign's planned vs actual Enquiries, Leads, VCs, Applications and Bookings, along with planned/actual spend. For each metric it computes cost-per-unit (amount divided by count), flags whether the actual cost beat the planned cost with a CSS class, and computes a progress percentage capped at 100. Enquiries is special-cased to show 'N/A' for its planned value and cost since no planned-enquiries figure exists. |
+| `Ex_AccountHandlerServices` | Runs duplicate-account detection during Account processing by delegating the actual matching logic to Ex_DuplicationHandlerServices.duplicationCheckAcccount() and, for every Account flagged as a likely duplicate, adds a page/record error naming the existing duplicate's name and Id so the user can resolve it before saving — skipped automatically while running tests. |
+| `Ex_AccountService` | A commented-out class (its entire body is wrapped in a block comment) that was designed to notify an external system of Account inserts and updates via @future(callout=true) methods, reading a base endpoint URL from a custom HOABL_CMS__c setting and pushing a wide set of Account/PersonAccount fields (contact details, tier, KAM, channel partner) to that endpoint whenever accounts changed. |
+| `Ex_AccountTriggerHandler` | Handles Account trigger logic, focused on PersonAccount records. On before-insert it builds a country-code lookup from Country_Codes__c custom settings, then for every PersonAccount formats a combined Mobile_with_Country_Code__c field (and a Marketing-Cloud-friendly variant without the '+') from the record's country code and mobile number, validating the resulting length against the matched country's configured min/max digit rules. |
+| `Ex_CampaignBatchClass` | A scheduled batch that finds Active campaigns of type 'Daily' whose start date has arrived (or passed, excluding ones created that same day) and inserts a new Campaign_Performance__c record dated tomorrow for each one, effectively pre-seeding the next day's performance-tracking row so daily campaign metrics have somewhere to roll up into automatically. |
+| `Ex_CampaignHandlerServices` | Creates Campaign_Performance__c tracking records for a given set of Campaign Ids. For 'Daily' performance type it inserts one row dated today per campaign; for 'One-Time' type it instead dates the row to the campaign's own StartDate, giving campaigns that only run once a single performance record tied to their actual run date rather than a recurring daily one. |
+| `Ex_CampaignTriggerHandler` | On Campaign insert, splits incoming records into Active campaigns (triggering a 'Daily' performance record via Ex_CampaignHandlerServices) and campaigns whose Campaign_Performance_Type__c is 'One-Time' (triggering a one-time performance record keyed to the campaign's start date), so every new campaign automatically gets its first performance-tracking row created in the correct cadence. |
+| `Ex_DigitalLeadHandlerServices` | Processes Facebook-sourced Digital Leads into Salesforce Leads/Opportunities. fbLeadProcess() loads a Digital_Lead__c's full ad-attribution payload (campaign, adset, ad, UTM parameters, GCLID/FBCLID click ids, CTI flag) for a single lead at a time and converts it into the corresponding Lead/Account/Opportunity records, recently modified to no longer require the matched Campaign to be Active__c. |
+| `Ex_DigitalLeadTriggerHandler` | On Digital_Lead__c insert and update, collects every record that isn't yet Executed__c (or just flipped back to not-executed) and passes those Ids to Ex_DigitalLeadHandlerServices.fbLeadProcess(), so a Facebook-sourced lead is processed into a Lead/Opportunity exactly once it's ready, and reprocessed if something resets its executed flag. |
+| `Ex_LaunchService` | Syncs Launch records to an external CMS/website. insertLaunch() and updateLaunch() are future, callout-enabled methods that load a Launch's public-facing fields (name, salt/key credentials, company name, area and price ranges, organic campaign Id) along with the active HOABL_CMS__c base URL setting, then push each launch to the external CMS via handleApiCall() so the public website's project listings stay in sync with Salesforce. |
+| `Ex_leadSummaryController` | Backs a lead-summary widget. getLeadDetails() returns a single Lead's CTI dialer presence, connection/serviced status, and call/not-connected-call counts, giving an at-a-glance view of a lead's calling engagement without needing to open the full record. |
+| `Ex_OpportunityHandlerServices` | Runs duplicate-Opportunity detection with differentiated error messages. duplicationCheck() delegates matching to Ex_DuplicationHandlerServices.duplicationCheckOpportunity() and tailors the error shown per conflict type: a clear 'Meeting Done' message if the existing duplicate already had its meeting completed, a 'System Generated' message if the duplicate was auto-created, and a generic duplicate message otherwise (suppressed during tests), so the sales rep understands why they can't create a second Opportunity for the same launch. |
+| `Ex_OpportunityTriggerHandler` | On Opportunity before-insert, resolves the correct RecordTypeId from a plain-text Record_Type_Name__c field passed in from external sources, and sets a different CloseDate when running inside a test context versus normal execution, among other grouped logic (round-robin and referral assignment lists) visible further in the class for routing new opportunities to the right sourcing manager. |
 
 </Section>
 
@@ -69,5 +69,16 @@ This page documents the 15 objects, 13 Apex classes and 4 Lightning web componen
 | `Raise_Ticket` |
 | `Tableau_Analytics_Page` |
 | `Whatsapp_Template_Dashboard` |
+
+</Section>
+
+
+<Section>
+
+## Test coverage
+
+Coverage comes from the Apex test classes that exercise each production class, measured in the HoABL production org. Where a class has no test class clearly dedicated to it, the test that covers the most of its code is shown instead. Classes with no test coverage at all are omitted from this table.
+
+<Coverage module="marketing" />
 
 </Section>

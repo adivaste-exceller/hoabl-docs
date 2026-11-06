@@ -41,72 +41,72 @@ This page documents the 16 objects, 64 Apex classes, 6 Lightning web components 
 
 ## Apex classes
 
-| Class |
-| --- |
-| `Ex_AccountHandlerServices` |
-| `Ex_AccountService` |
-| `Ex_AccountTriggerHandler` |
-| `Ex_CallDispositionController` |
-| `Ex_ClickToCallController` |
-| `Ex_ContactTriggerHandler` |
-| `ex_convoxtaskdisportionController` |
-| `Ex_CTIDashboard` |
-| `Ex_CTIDashboardReuploadController` |
-| `Ex_CTILeadDeleteServices` |
-| `Ex_CTILeadListHandlerServices` |
-| `Ex_CTILeadListTriggerHandler` |
-| `Ex_CTILeadUploadServices` |
-| `Ex_DigitalLeadHandlerServices` |
-| `Ex_DigitalLeadTriggerHandler` |
-| `Ex_DirectOpportunityCreationPresales` |
-| `Ex_DocumentDispatchController` |
-| `Ex_DocumentHandler` |
-| `Ex_getAllAccountDetails` |
-| `Ex_INFormat` |
-| `Ex_LaunchService` |
-| `Ex_LeadConversion` |
-| `Ex_LeadHandlerServices` |
-| `Ex_LeadSourceDashboard` |
-| `Ex_leadSummaryController` |
-| `Ex_LeadTriggerHandler` |
-| `Ex_LeadUploadExecutionBatch` |
-| `Ex_LeadUploadManagementServices` |
-| `Ex_LeadUploadTriggerHandler` |
-| `Ex_LeadValidityExpiryBatch` |
-| `Ex_NumberToWordsConverter` |
-| `Ex_OpportunityHandlerServices` |
-| `Ex_OpportunityTriggerHandler` |
-| `Ex_POApprovalController` |
-| `Ex_PORequestHandlerServices` |
-| `Ex_PORequestSpendBatch` |
-| `Ex_PORequestTriggerHandler` |
-| `Ex_ProcessHandlerServices` |
-| `Ex_ProcessTriggerHandler` |
-| `Ex_ProjectHandlerServices` |
-| `Ex_ProjectService` |
-| `Ex_RequestPOController` |
-| `Ex_RestAccountService` |
-| `Ex_RestAccountUpdateService` |
-| `Ex_RestCallbakConvox` |
-| `Ex_RestCreateTask` |
-| `Ex_RESTCTILeadIntegration` |
-| `Ex_RestCTILeadUpdateService` |
-| `Ex_RESTCustomerIdentityAPI` |
-| `Ex_RestGetAccountDetails` |
-| `Ex_RestGetAgentAPI` |
-| `Ex_RestGetAllLauchDetails` |
-| `Ex_RestGetAllProjectDetails` |
-| `Ex_RestGetLaunchDetails` |
-| `Ex_RestGetProjectDetails` |
-| `Ex_RestTaskDispositionAPI` |
-| `ex_TaskCreationController` |
-| `Ex_TaskHandlerServices` |
-| `Ex_TaskTriggerHandler` |
-| `Ex_TeamMemberHandlerServices` |
-| `Ex_TeamMemberTriggerHandler` |
-| `Ex_updateEmailonAccount` |
-| `MultiSelectComboboxController` |
-| `searchPhoneApexClass` |
+| Class | Description |
+| --- | --- |
+| `Ex_AccountHandlerServices` | Runs duplicate-account detection during Account processing by delegating the actual matching logic to Ex_DuplicationHandlerServices.duplicationCheckAcccount() and, for every Account flagged as a likely duplicate, adds a page/record error naming the existing duplicate's name and Id so the user can resolve it before saving — skipped automatically while running tests. |
+| `Ex_AccountService` | A commented-out class (its entire body is wrapped in a block comment) that was designed to notify an external system of Account inserts and updates via @future(callout=true) methods, reading a base endpoint URL from a custom HOABL_CMS__c setting and pushing a wide set of Account/PersonAccount fields (contact details, tier, KAM, channel partner) to that endpoint whenever accounts changed. |
+| `Ex_AccountTriggerHandler` | Handles Account trigger logic, focused on PersonAccount records. On before-insert it builds a country-code lookup from Country_Codes__c custom settings, then for every PersonAccount formats a combined Mobile_with_Country_Code__c field (and a Marketing-Cloud-friendly variant without the '+') from the record's country code and mobile number, validating the resulting length against the matched country's configured min/max digit rules. |
+| `Ex_CallDispositionController` | Backs the call-disposition logging UI used after a sales call. getCategoryPicklist() reflects Task.Category__c's active values for the disposition category dropdown, and getActiveLaunches() returns every active Launch (enforcing field-level security) as label/value options so the agent can tag which launch the call related to. |
+| `Ex_ClickToCallController` | Supplies picklist options for the click-to-call dialog on a Task: getCategoryPicklist() reflects Task.Category__c's active values and getFundingTypePicklist() reflects Task.Funding_Type__c's, letting the LWC populate both dropdowns from live schema metadata instead of a hardcoded list that could drift from the actual picklist configuration. |
+| `Ex_ContactTriggerHandler` | On before-insert, formats a Contact's phone and mobile numbers with their respective country codes into combined fields, then — only for Contacts using the CP_Contact record type — runs them through Ex_ContactHandlerServices' duplication check, since the duplicate-detection rule for Contacts is scoped specifically to Channel Partner contact records rather than all Contacts. |
+| `ex_convoxtaskdisportionController` | Supports the Convox task-disposition UI. getRecordTypeId() resolves the Task record type Id for 'Sales Call' dispositions, and getObjectInfo() returns an ObjectInfoResponse flag indicating whether a given object API name is Lead, so the disposition component can branch its field layout depending on whether the call was against a Lead or another object type. |
+| `Ex_CTIDashboard` | Filters and prepares Leads before they're uploaded to the Convox CTI partner. getCustomSettings() returns the configured Convox_CRM_Fields__c mappings, deliberately excluding a fixed set of fields (project/launch name, proposed VC date/time, sourcing manager, UTM fields, name/email, customer rating) that are handled separately, and getPicklistValues() generically reflects any Lead field's picklist values for the dashboard's filter controls. |
+| `Ex_CTIDashboardReuploadController` | Supplies Lead Status and Lead_Sub_Stage__c picklist values for the CTI re-upload dashboard, which lets an admin filter and re-send Leads to the Convox dialer after they've already stalled or fallen out of the active calling queue. |
+| `Ex_CTILeadDeleteServices` | Removes Leads from the Convox CTI dialer. deleteLeads() serializes the given Lead list to JSON and hands it to a future, callout-enabled method that deserializes it and sends a structured delete request (action, reference number, batch id) to Convox, keeping the dialer's lead list in sync when Leads are disqualified or removed on the Salesforce side. |
+| `Ex_CTILeadListHandlerServices` | Prevents duplicate CTI_Lead_List__c upload batches for the same Process. checkForDuplicateProcess() collects each incoming record's Process__c, queries existing CTI_Lead_List__c records already tied to those same processes along with the process type, and (beyond this excerpt) flags or blocks a second list being created for a process that's already been uploaded. |
+| `Ex_CTILeadListTriggerHandler` | A thin before-insert handler for CTI_Lead_List__c that forwards every incoming batch straight to Ex_CTILeadListHandlerServices.checkForDuplicateProcess() to enforce one lead-list upload per Process. |
+| `Ex_CTILeadUploadServices` | Builds the structured upload payload sent to the Convox CTI dialer for new Leads. Its LeadUploadRequest/LeadData inner classes model Convox's expected JSON shape — mobile number, Salesforce Id, process/list name, do-not-call check, plus arbitrary general and CRM field maps — so a batch of Leads can be serialized and pushed to Convox in the format it requires. |
+| `Ex_DigitalLeadHandlerServices` | Processes Facebook-sourced Digital Leads into Salesforce Leads/Opportunities. fbLeadProcess() loads a Digital_Lead__c's full ad-attribution payload (campaign, adset, ad, UTM parameters, GCLID/FBCLID click ids, CTI flag) for a single lead at a time and converts it into the corresponding Lead/Account/Opportunity records, recently modified to no longer require the matched Campaign to be Active__c. |
+| `Ex_DigitalLeadTriggerHandler` | On Digital_Lead__c insert and update, collects every record that isn't yet Executed__c (or just flipped back to not-executed) and passes those Ids to Ex_DigitalLeadHandlerServices.fbLeadProcess(), so a Facebook-sourced lead is processed into a Lead/Opportunity exactly once it's ready, and reprocessed if something resets its executed flag. |
+| `Ex_DirectOpportunityCreationPresales` | Backs direct Opportunity creation specifically from the Presales channel, exposing the same getLaunchNames() and getCountryCodes() methods as the other Direct/Digital Opportunity Creation controllers, kept as its own class so Presales-specific creation logic can diverge from the standard Sales flow if needed. |
+| `Ex_DocumentDispatchController` | Backs the Document Dispatch Information LWC on a Registration Case, which tracks the full lifecycle of a physically signed document: signing date, dispatch date/mode, courier company and tracking number, delivery date, return handling (whether returned, to whom, and why) and final handover (to whom and when). getRegistrationCase() loads all of this as a RegistrationCaseWrapper, replacing an earlier version that returned the raw Registration_Case__c record directly. |
+| `Ex_DocumentHandler` | Sends a document-ready email to a customer. sendEmail() resolves the correct sender address — the 'Updates HoABL' Org-Wide Email Address, or 'Vertical No reply' for vertical projects — and pulls the target Documents__c record's type, future-correspondence contact details and the Project/Service Manager context needed to compose and send the notification. |
+| `Ex_getAllAccountDetails` | An inbound @RestResource endpoint (/getAllAccountDetails) exposing every Person Account in the org to an external partner system. It returns a large, 'hoabl_'-prefixed field set — name, contact details, demographics, channel partner, customer tier, KAM, address, WhatsApp consent, and completed/ongoing investment summary figures — as a bulk feed, likely consumed by a partner portal or external CRM integration (matching the 'Web_Integration_App' connected app). |
+| `Ex_INFormat` | A number-formatting utility (reused from an earlier Exceller demo org) that converts a Decimal amount into the Indian numbering format (lakhs/crores grouping with commas, e.g. 12,34,567 rather than 1,234,567), handling negative values and preserving any decimal portion, used wherever currency amounts need to display in the Indian convention rather than the Western one. |
+| `Ex_LaunchService` | Syncs Launch records to an external CMS/website. insertLaunch() and updateLaunch() are future, callout-enabled methods that load a Launch's public-facing fields (name, salt/key credentials, company name, area and price ranges, organic campaign Id) along with the active HOABL_CMS__c base URL setting, then push each launch to the external CMS via handleApiCall() so the public website's project listings stay in sync with Salesforce. |
+| `Ex_LeadConversion` | Carries WhatsApp message history forward when a Lead converts to an Opportunity. convertLead() finds every Whatsapp_Message__c already linked to the Leads being converted, maps them by Lead Id, and (beyond this excerpt) re-links those messages to the newly created Opportunity so a customer's prior WhatsApp conversation history isn't lost once their Lead becomes an Opportunity. |
+| `Ex_LeadHandlerServices` | Runs duplicate-Lead detection and basic data-quality validation on Leads. duplicationCheck() blocks a Lead whose mobile number matches its own alternate mobile number outright, otherwise delegates to Ex_DuplicationHandlerServices.duplicationCheck() and adds a record error for any Lead matched against another existing Lead, with separate handling (beyond this excerpt) for Channel-Partner-sourced leads and an optional round-robin assignment step. |
+| `Ex_LeadSourceDashboard` | Returns a Lead's enquiry history for the lead-source dashboard. getTaskDetails() queries every Task of record type 'Enquiry' related to the given Lead (via WhoId), newest first, including the launch, lead source/sub-source and campaign on each enquiry so the dashboard can show how and where the lead has engaged over time. |
+| `Ex_leadSummaryController` | Backs a lead-summary widget. getLeadDetails() returns a single Lead's CTI dialer presence, connection/serviced status, and call/not-connected-call counts, giving an at-a-glance view of a lead's calling engagement without needing to open the full record. |
+| `Ex_LeadTriggerHandler` | A large handler governing Lead creation rules, including shift-hour-aware routing for digital leads: it reads Ex_Digital_Lead_Shift_Config__c for the configured shift start/end hours (defaulting 8 AM–11 PM IST) and the current hour in Asia/Kolkata to determine whether a lead is arriving during non-shift hours, assigns a priority from Lead_Type_Priority__c records, and tracks a per-transaction skipFutureCTIUploadLeadIds set so leads released from shift-holding by a batch job don't get double-pushed to Convox outside the allowed @future context. |
+| `Ex_LeadUploadExecutionBatch` | A one-time batch that dynamically describes Lead_Upload__c to build its full field list at runtime, then (beyond this excerpt) processes a given set of Lead_Upload__c staging records into real Lead records, letting bulk lead-upload data be validated and converted without hardcoding every staging field in the batch's SOQL. |
+| `Ex_LeadUploadManagementServices` | Converts a single Lead_Upload__c staging record into a real Lead. executeLead() resolves the correct Lead record type by the upload's Type__c label, maps across name, contact, country-code and launch/channel-partner fields, flags the new lead for round-robin assignment, and defaults Lead Source/Sub-Source to blank rather than null when not supplied. |
+| `Ex_LeadUploadTriggerHandler` | On Lead_Upload__c insert, collects every record not yet Executed__c and kicks off Ex_LeadUploadExecutionBatch (batch size 1, so each staging row is processed as its own transaction) to convert them into real Leads; afterUpdate re-triggers the same batch for records whose Executed__c flag just flipped back to false. |
+| `Ex_LeadValidityExpiryBatch` | A stateful batch that finds Leads marked Is_Connected__c but still sitting in '02- Contacted' status past their configured Validity__c date, and expires them: removing them from the CTI dialer (Present_in_CTI_Dialer__c = false), moving their Status to '04- Lost' and setting Lead_Sub_Stage__c to 'Validity Expired', so stale contacted leads are automatically cleaned out of the active pipeline. |
+| `Ex_NumberToWordsConverter` | Converts a numeric currency amount into its English words representation (e.g. for cheques or legal documents). config() seeds a lookup list of number words from Zero through at least Nineteen, which the rest of the class (beyond this excerpt) combines with tens/hundreds/thousands/lakhs/crores logic to spell out arbitrarily large Indian-formatted currency amounts in words. |
+| `Ex_OpportunityHandlerServices` | Runs duplicate-Opportunity detection with differentiated error messages. duplicationCheck() delegates matching to Ex_DuplicationHandlerServices.duplicationCheckOpportunity() and tailors the error shown per conflict type: a clear 'Meeting Done' message if the existing duplicate already had its meeting completed, a 'System Generated' message if the duplicate was auto-created, and a generic duplicate message otherwise (suppressed during tests), so the sales rep understands why they can't create a second Opportunity for the same launch. |
+| `Ex_OpportunityTriggerHandler` | On Opportunity before-insert, resolves the correct RecordTypeId from a plain-text Record_Type_Name__c field passed in from external sources, and sets a different CloseDate when running inside a test context versus normal execution, among other grouped logic (round-robin and referral assignment lists) visible further in the class for routing new opportunities to the right sourcing manager. |
+| `Ex_POApprovalController` | Backs PO (Purchase Order) request approval. getPORequestsForUser() (noted in its own comment as currently unused) would return PO Requests in a given status where the amount isn't yet approved and the logged-in user is the designated approver, and approvePORequest() carries out the actual approval action on a specific PO Request. |
+| `Ex_PORequestHandlerServices` | An empty placeholder class with no methods defined in this version — likely scaffolded for future PO Request business logic that hasn't been implemented yet, or logic that was since moved elsewhere. |
+| `Ex_PORequestSpendBatch` | A stateful, scheduled batch that creates weekly Spend__c records against every Approved PO Request whose approved amount hasn't yet been fully matched by spend, generating spend entries dated from the current week going forward until the PO's approved amount and spent amount reconcile, effectively drip-feeding the budget spend tracking on a weekly cadence rather than posting it all at once. |
+| `Ex_PORequestTriggerHandler` | On PO Request update, detects the moment a request's status changes to 'Approved' and, for that transition only, copies the requested PO_Amount__c into PO_Approved_Amount__c and resets PO_Amount__c to zero, converting a pending request amount into a locked-in approved amount exactly once at approval time. |
+| `Ex_ProcessHandlerServices` | Validates that every Process__c (a marketing/outreach campaign-like record) has at least one Launch selected. duplicationForProcess() adds a record error naming the specific process type (e.g. 'Digital' or 'ATL') if Launch__c is blank on any record, and separately errors if the whole incoming batch collectively has no launches selected at all, ensuring a process is always scoped to real launches before being saved. |
+| `Ex_ProcessTriggerHandler` | On Process__c before-insert, splits incoming records into Digital-type and ATL-type processes and runs each group through Ex_ProcessHandlerServices.duplicationForProcess() with the appropriate type label, so the launch-required validation message correctly names which kind of process is missing its launch. |
+| `Ex_ProjectHandlerServices` | Houses Project-level automation, including a commented-out createBankAPFAndDSAForProjects() method that would have auto-generated a Bank_APFs__c and Bank_DSAs__c record for every combination of a new Project and every Bank in the org — since disabled, presumably because that many-to-many record generation proved unnecessary or too broad in practice; the active createProjectInCMS() method (referenced by the Project trigger) pushes new projects to the external CMS. |
+| `Ex_ProjectService` | Syncs Project records to the external CMS, mirroring Ex_LaunchService's pattern. insertProject() and updateProject() are future, callout-enabled methods that load a project's public-facing location fields (street, city, state, pincode, latitude/longitude, altitude) along with the active HOABL_CMS__c base URL, then push each project to the CMS so the public website's project pages stay in sync with Salesforce. |
+| `Ex_RequestPOController` | Backs the Request PO (Purchase Order) action. createRequestPO() takes a map of submitted field values (vendor name, PO number/amount, budget head and header/sub-header), inserts the new PO_Request__c, then re-queries it to confirm creation and, if a file was uploaded alongside the request, attaches it as a ContentVersion on the new PO request. |
+| `Ex_RestAccountService` | An inbound @RestResource endpoint (/account/create) letting an external system create a Person Account in Salesforce. It validates that last name, mobile and country code are present, strips a leading '+' from the country code, and validates the mobile number's length against the matching Country_Codes__c configuration before creating the account — part of the same 'hoabl_'-prefixed partner-facing REST API surface as the getAllAccountDetails endpoints. |
+| `Ex_RestAccountUpdateService` | An inbound @RestResource endpoint (/account/update) letting an external system update an existing Person Account, identified by 'hoabl_Id' in the request body. It loads the account's full field set — identical to the one returned by Ex_getAllAccountDetails — before applying the incoming changes, so the same partner integration that reads account data can also push updates back. |
+| `Ex_RestCallbakConvox` | An inbound @RestResource endpoint (/CTI/getAgentConvox/) receiving call-outcome callbacks from Convox. handleRequest() parses a detailed call record — agent, call mode/status/date/time/duration, ring duration, station, list Id, DID, call Id, process name, and the Opportunity/Task Ids the call relates to, plus a recording URL — and (beyond this excerpt) writes that outcome back onto the matching Task in Salesforce. |
+| `Ex_RestCreateTask` | An inbound @RestResource endpoint (/createTask/) that creates a Task from an external caller (likely the CTI/dialer system), requiring Subject, OpportunityId and OwnerId in the request. It also flags the related Opportunity as having had a missed call and restricts missed-call task creation for opportunities already in certain stages, so the dialer can't spam missed-call tasks onto opportunities past the point where that matters. |
+| `Ex_RESTCTILeadIntegration` | An inbound @RestResource endpoint (/CreateCTILead/*) creating a Lead from a CTI system. createLead() validates that mobile and campaign code are both present, building a combined, grammatically-correct error message listing every missing field (handling singular 'is' vs plural 'are' correctly) before proceeding to create the lead. |
+| `Ex_RestCTILeadUpdateService` | An inbound @RestResource endpoint (/CTILeadUpdate) that updates an existing Lead from Convox. updateLeadFromConvox() requires an sfdcID identifying the Lead, then loads a very large field set — sub-source, occupation, UTM parameters, reason for purchase, proposed visit date, project type, funding type, DNC flag, conversation summary, status/sub-stage, CTI dialer presence — and selectively overwrites only the fields actually present in the incoming JSON payload. |
+| `Ex_RESTCustomerIdentityAPI` | An inbound, without-sharing @RestResource endpoint (/CustomerIdentity/*) that verifies a customer's identity by mobile number. checkMobileNumber() strips non-numeric characters from the submitted number and searches Applicant__c records where it matches either the primary or alternate mobile field, returning a 400 if no mobile number was supplied, used by an external system to confirm whether a given phone number belongs to a known HoABL customer. |
+| `Ex_RestGetAccountDetails` | An inbound @RestResource endpoint (/getAccountDetails) that looks up a Person Account either by its Account Id directly, or by mobile number plus phone country code if no Id is given, requiring at least one of those identification paths and returning the same large 'hoabl_'-style account field set as the bulk account endpoints for a single matched account. |
+| `Ex_RestGetAgentAPI` | An inbound @RestResource endpoint (/getAgentAPI/) used to route an inbound call to the right agent. matchAndRedirect() looks up the most recent Opportunity by mobile number and returns that opportunity's Closing Manager and Sourcing Manager usernames (along with the Opportunity Id and launch) so a telephony system can redirect the call to whichever rep already owns that customer relationship. |
+| `Ex_RestGetAllLauchDetails` | An inbound @RestResource endpoint (/getAllLaunchRecords) returning every Launch in the org — name, salt/key credentials, company, active flag, organic campaign Id and parent project — as a bulk feed for an external system, part of the same partner-facing REST layer as the account and property-type bulk endpoints. |
+| `Ex_RestGetAllProjectDetails` | An inbound @RestResource endpoint (/getAllProjectDetails/*) returning every Project's location details — latitude/longitude, altitude, full address, country — as a bulk feed for an external system such as a map-based listings integration. |
+| `Ex_RestGetLaunchDetails` | An inbound @RestResource endpoint (/getLaunchDetails) returning a single Launch's details (name, salt/key, company, active flag) by Id, requiring the Launch Id in the POST body and returning a clear error if it's missing or the launch doesn't exist — the single-record counterpart to the bulk launch endpoint. |
+| `Ex_RestGetProjectDetails` | An inbound @RestResource endpoint (/getProjectDetails/*) returning a single Project's location details by Id, validating the Project Id is supplied and the project exists before responding — the single-record counterpart to the bulk project-details endpoint. |
+| `Ex_RestTaskDispositionAPI` | An inbound @RestResource endpoint (/callStatus/*) receiving detailed call disposition data from a CTI system — user, call mode, who disconnected, call type, agent name, status, date/time, duration, queue name/duration, ring duration, who completed it, follow-up time and station — and (beyond this excerpt) writing that outcome onto the corresponding Task. |
+| `ex_TaskCreationController` | Backs a generic Task-creation dashboard. Its ServiceManagerWrapper DTO pairs a Service Manager's Id and display name for a picker, while a broader getRecords() method (shown commented out, intended to fetch loyal-customer Accounts or other record types with sortable fields) appears to be mid-refactor or disabled in this version. |
+| `Ex_TaskHandlerServices` | Rolls up Task-based call/meeting activity onto its parent record. CallHandlerServices() loads Tasks of specific record types (Presales Call, Sales Call, CSS Task, Loan, CSS Call) with their full disposition and stage context, then groups them by parent Lead, Opportunity, Booking or Loan Case into separate maps so each parent record's rollup fields (like last call status or disposition) can be updated based on its own most relevant task activity. |
+| `Ex_TaskTriggerHandler` | On Task insert, identifies tasks that carry disposition/stage data and belong to specific call-related record types (Presales Call, Sales Call, CSS Task, CSS Call) or are a Loan task, collecting their Ids so Ex_TaskHandlerServices.CallHandlerServices() can roll up the activity onto the right parent record (Lead, Opportunity, Booking or Loan Case). |
+| `Ex_TeamMemberHandlerServices` | Manages Closing Team member availability eligibility for launch assignment. checkLaunchAvailabilityforClosingTeam() loads every other Closing Team member currently marked available for launch assignment (excluding the incoming records on an update, to avoid comparing a record against itself) so the caller can detect and prevent a conflicting state where a user ends up marked available on two different team assignments at once. |
+| `Ex_TeamMemberTriggerHandler` | Prevents duplicate Closing-vertical team assignments. beforeInsert() identifies new Team Members in the Closing vertical with both a User and Team set (though the actual availability-conflict check call is currently commented out), and beforeUpdate() detects relevant changes (User, Team, or Launch_Availability__c) to flag records that need the same conflict check re-run. |
+| `Ex_updateEmailonAccount` | Lets a rep correct a customer's email directly from an Opportunity. getAccountEmail() returns the linked Account's primary and alternate email, and updateAccountEmail() updates whichever of the two fields was supplied (leaving the other untouched), throwing a clear error if the Opportunity has no linked Account. |
+| `MultiSelectComboboxController` | A generic, reusable server-side search controller for multi-select combobox components. searchRecords() takes an object API name, which fields to search, a display/value field pair, a search term and an optional set of additional WHERE conditions, then dynamically builds and runs the SOQL query — letting one controller power multi-select pickers against any object instead of writing a bespoke Apex method per picker. |
+| `searchPhoneApexClass` | A legacy, globally-exposed SOAP web service method for CTI phone-number lookup. SearchPhone() finds the most recently modified, non-deleted, non-converted Lead matching a given phone or mobile number, tags it with the calling process and queue name, and updates it — an older integration pattern (webService keyword, SOAP) that predates the newer REST-based CTI endpoints elsewhere in the org, with Project and Lead Source assignment logic visibly commented out. |
 
 </Section>
 
@@ -132,5 +132,16 @@ This page documents the 16 objects, 64 Apex classes, 6 Lightning web components 
 | Page |
 | --- |
 | `Ex_DirectOpportunityCreationPresales_VF` |
+
+</Section>
+
+
+<Section>
+
+## Test coverage
+
+Coverage comes from the Apex test classes that exercise each production class, measured in the HoABL production org. Where a class has no test class clearly dedicated to it, the test that covers the most of its code is shown instead. Classes with no test coverage at all are omitted from this table.
+
+<Coverage module="presales" />
 
 </Section>

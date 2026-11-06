@@ -41,43 +41,54 @@ This page documents the 24 objects and 36 Apex classes used by the Finance modul
 
 ## Apex classes
 
-| Class |
-| --- |
-| `Ex_ApexSharingManagementServices` |
-| `Ex_AppCancellationDocVerifierController` |
-| `Ex_ApplicantTriggerHandler` |
-| `Ex_ApplicationCancellationCaseController` |
-| `Ex_ApplicationCancelMessagingBatch` |
-| `Ex_ApplicationCancelMessagingHandler` |
-| `Ex_ApplicationHandlerServices` |
-| `Ex_ApplicationTriggerHandler` |
-| `Ex_BankTransactionReceiptController` |
-| `Ex_BankTransactionTriggerHandler` |
-| `Ex_BookingHandlerServices` |
-| `Ex_BrokerageApprovalDashboardController` |
-| `Ex_CaseHandlerServices` |
-| `Ex_CaseTriggerHandler` |
-| `Ex_CompanyBankAccountHandlerServices` |
-| `Ex_CompanyBankAccountTriggerHandler` |
-| `Ex_eReceiptHandler` |
-| `ex_FinanceApprovalDashboardController` |
-| `Ex_FinanceTeamRefundDashboardController` |
-| `Ex_PaymentEReceiptController` |
-| `Ex_PrintPaymentReceipt1Controller` |
-| `Ex_PrintPaymentReceiptController` |
-| `Ex_PrintReceiptController` |
-| `Ex_ProjectHandlerServices` |
-| `Ex_ProjectService` |
-| `Ex_ProjectTriggerHandler` |
-| `Ex_ReceiptApprovalDashboard` |
-| `Ex_ReceiptHandlerServices` |
-| `Ex_ReceiptTriggerHandler` |
-| `Ex_ReceiptViewDashboard` |
-| `Ex_RefundHandlerServices` |
-| `Ex_RefundHelpdeskDashboardController` |
-| `Ex_RefundTriggerHandler` |
-| `Ex_RestEReceiptAPI` |
-| `Ex_ViewOnAccountMoneyReceiptController` |
-| `Ex_ViewReceiptController` |
+| Class | Description |
+| --- | --- |
+| `Ex_ApexSharingManagementServices` | The org's central Apex-managed sharing utility, used by multiple trigger handlers (Applicant, Application) to share Leads, Opportunities and custom objects with specific users or teams outside standard role-hierarchy visibility. shareRecordWithTeamLeadandTeamHead() dynamically builds the correct share-object and parent-field names per SObject type (LeadShare/OpportunityShare/__Share), queries existing shares to avoid duplicate inserts, then shares each record with the mapped team leads and heads. |
+| `Ex_AppCancellationDocVerifierController` | Updates an Application's bank account details (name, number, branch, IFSC code, bank name) when a refund's cancellation documentation is being verified, looking up the parent Application from the given Refund__c record and only overwriting fields the caller actually supplied, throwing an AuraHandledException if the refund Id is missing or invalid. |
+| `Ex_ApplicantTriggerHandler` | Handles Applicant__c trigger logic around sharing and booking sync. On insert it shares the parent Application/Opportunity with relevant users via Ex_ApexSharingManagementServices for every applicant tied to an Application. On update, if Update_Sharing__c flips true it re-shares the record, and separately, when the Primary Applicant's name, mobile or email changes, it stages the corresponding field changes to be pushed onto the related Booking__c. |
+| `Ex_ApplicationCancellationCaseController` | Supports the Application-cancellation Case workflow. getCase() returns a Case's approver comments at each escalation level, its escalation level and assignee, and the related Application, while getFirstRefundDeskUserId() finds the longest-tenured active user on the 'Refund Desk' profile to use as a default assignee when a cancellation case needs to be routed to that queue. |
+| `Ex_ApplicationCancelMessagingBatch` | A scheduled Batchable job that finds every open Case flagged as an Application-cancellation refund case and gathers each one's full escalation contact chain — the application owner, the closing manager's team lead, the launch's closing head, business head, MSS lead/head and CSO, plus the project's refund helpdesk team — together with aging fields (hours open, response/escalation TAT) so the paired handler class can send the right overdue-escalation emails to the right people. |
+| `Ex_ApplicationCancelMessagingHandler` | Sends escalation emails for aging Application-cancellation cases found by Ex_ApplicationCancelMessagingBatch. It defines business-hours (9) vs calendar-hours (24) constants for SLA math, builds a clean manager display name from first/last name fields (falling back gracefully if either is blank), and groups cases by escalation day-number and manager name so one combined email per manager/day can be sent instead of one per case. |
+| `Ex_ApplicationHandlerServices` | Houses Application__c business logic, with sortApplicationsSequenceWise() as a @future method that reloads a given set of Applications ordered by creation date, groups them by their parent Opportunity, and (in code beyond this excerpt) renumbers each Opportunity's Applications' Sequence__c so applications are always numbered in the order they were actually created, even after some are deleted or reordered. |
+| `Ex_ApplicationTriggerHandler` | Handles Application__c trigger logic. On insert, for every Application linked to an Opportunity it shares the Opportunity with the right users via Ex_ApexSharingManagementServices and collects the Application's Id, then calls Ex_ApplicationHandlerServices.sortApplicationsSequenceWise() on the full batch so newly inserted Applications are immediately renumbered within their Opportunity. |
+| `Ex_BankTransactionReceiptController` | Supports the bank-transaction receipt screen for a Project. getCompanys() returns the distinct set of Companies used by Bookings on the given Project (so the receipt form only offers relevant legal entities), and getPicklistValues() generically reflects any object/field's active picklist values given their API names, letting the LWC populate dropdowns without per-field Apex methods. |
+| `Ex_BankTransactionTriggerHandler` | Trigger handler for Bank_Transaction__c that, on before-insert, collects records that have a Transaction Id, Transaction Date and Amount all populated and forwards them to Ex_eReceiptHandlerServices.eReceiptAndBankTransactionDuplicationCheck() to catch transactions that duplicate an already-recorded e-receipt or bank transaction, repeating the same check on update for changed records. |
+| `Ex_BookingHandlerServices` | A large service class holding core Booking__c business logic, including (in code beyond this excerpt) demand-raising based on payment milestone schedules. Its commented-out raiseBookingRelatedDemand() method shows the intended approach: dynamically build a SOQL query across Payment_Milestone__c's full charge breakdown (agreement value, development/consideration/statutory/other charges with GST splits) for bookings due on calculated demand-raise dates, tying milestones back to their Quotation and correspondence contact. |
+| `Ex_BrokerageApprovalDashboardController` | Backs the brokerage approval dashboard, which can be opened either directly on a Launch or from an approval ProcessInstanceWorkitem. getRelatedRecords() resolves the real target Launch either way (unwrapping the approval work item's TargetObjectId if needed), validates it is actually a Launch__c, then returns that launch's Brokerage Slabs (ordered by booking-count tier) and related Spot Brokerages for the approver to review together. |
+| `Ex_CaseHandlerServices` | A future, callout-enabled method that back-fills a Case's Account, Booking and Application from related records once a case is created, tagging the Account if it was left null. It resolves a default routing user from Case_Management_Default_User__c (matching the admin username with a LIKE pattern so sandbox-suffixed usernames like 'salesforceadmin@force.com.uat' still resolve) and uses that as a fallback owner when no project-specific routing applies. |
+| `Ex_CaseTriggerHandler` | Handles Case trigger logic, including (per this excerpt's afterInsert) loading configured restricted email domains from Case_Domain_Restrictions__c to flag or filter cases whose SuppliedEmail comes from a blocked domain — the actual case-deletion logic for matched domains is currently commented out, leaving the restricted-domain list collected but not yet acted upon in this version. |
+| `Ex_CompanyBankAccountHandlerServices` | A future, callout-enabled method that registers a new Company Bank Account with the payment gateway as a sub-merchant. It loads the 'Create Sub Merchant Id' endpoint and base URL from Sub_Merchant_API_Details__c custom settings, pulls the Company's Key/Salt credentials, and (beyond this excerpt) posts the bank account details to the gateway so payments collected under that company can be routed to the correct bank account. |
+| `Ex_CompanyBankAccountTriggerHandler` | Trigger handler for Company_Bank_Account__c: before-insert just logs the incoming batch, and after-insert collects every new record's Id and parent Company Id, then calls Ex_CompanyBankAccountHandlerServices.fetchCompanyBankAccounts() asynchronously to register the new bank account with the payment gateway's sub-merchant API. |
+| `Ex_eReceiptHandler` | Shares the parent Opportunity with the relevant users whenever an E-Receipt is processed. processEReceipts() only acts on receipts that are either a successful Auto receipt or any Manual receipt (explicitly excluding e.g. failed/pending Auto receipts below an Application threshold of ₹45,000), calling Ex_ApexSharingManagementServices to extend Opportunity sharing to whoever needs visibility into that receipt. |
+| `ex_FinanceApprovalDashboardController` | Manages the Finance team's booking-approval dashboard. getBookings() returns different Booking sets depending on the requested approval type: 'Balance Due Request' pulls bookings with Accounts_Manager_Approval_Status__c = 'Requested for Approval' that haven't completed their Balance Due or No Due checklist, and 'No Due Checklist' pulls a similarly scoped but differently filtered list for that specific checklist's approval queue. |
+| `Ex_FinanceTeamRefundDashboardController` | Backs the Finance team's refund dashboard. getRefundStatusList() reflects Case.Application_Case_Status__c's picklist values but explicitly excludes 'Sales Retention In-process' and 'Pending MSS Approval' from the filter options (since those statuses aren't relevant to Finance's refund queue), and getRefundList() returns the actual paginated list of refund cases matching the dashboard's selected filters. |
+| `Ex_PaymentEReceiptController` | A Visualforce controller for the printed payment e-receipt. It exposes a large set of public properties — receipt number, payment date/type/mode, amount (raw, formatted and spelled out in words), customer name/mobile/email, company name, address and GSTIN — defaulting Status to 'Approved' and reading the receipt Id from the page URL, for the page markup to render directly onto the printed receipt. |
+| `Ex_PrintPaymentReceipt1Controller` | A Visualforce controller for a printed payment receipt variant, exposing the receipt and its company, receipt number/date/type/mode, amount in raw/formatted/words form, customer name/mobile/email, and the full company legal letterhead (name, mobile, email, GST, CIN, registered address, city/state/country) for the page markup to render onto the printed receipt. |
+| `Ex_PrintPaymentReceiptController` | The original printed-receipt controller, exposing the same receipt, company and customer field set (name, mobile, email, formatted/worded amount, full company letterhead details including GST/CIN/address) as its later '1' and '2' variants, suggesting the receipt print layout was iterated on by adding new controller versions rather than modifying this one in place. |
+| `Ex_PrintReceiptController` | A Visualforce controller for a receipt print page that computes its own display data in its constructor (fetchDetails(), calculateCosts(), calculateTotalInWords()) rather than relying only on simple field bindings: it groups costs per demand into DemandCostWrapper rows, spells out the total cost in words, and resolves the primary applicant's name plus a comma-separated list of co-applicants alongside full address fields for the printed receipt. |
+| `Ex_ProjectHandlerServices` | Houses Project-level automation, including a commented-out createBankAPFAndDSAForProjects() method that would have auto-generated a Bank_APFs__c and Bank_DSAs__c record for every combination of a new Project and every Bank in the org — since disabled, presumably because that many-to-many record generation proved unnecessary or too broad in practice; the active createProjectInCMS() method (referenced by the Project trigger) pushes new projects to the external CMS. |
+| `Ex_ProjectService` | Syncs Project records to the external CMS, mirroring Ex_LaunchService's pattern. insertProject() and updateProject() are future, callout-enabled methods that load a project's public-facing location fields (street, city, state, pincode, latitude/longitude, altitude) along with the active HOABL_CMS__c base URL, then push each project to the CMS so the public website's project pages stay in sync with Salesforce. |
+| `Ex_ProjectTriggerHandler` | On Project insert, pushes the new project to the external CMS via Ex_ProjectHandlerServices.createProjectInCMS() and also calls Ex_ProjectService.insertProject() — effectively syncing the new project through two separate integration paths — while an older createBankAPFAndDSAForProjects() call is commented out; on update, it detects changes to any CMS-relevant field (name, address fields, etc.) to decide whether a CMS update push is needed. |
+| `Ex_ReceiptApprovalDashboard` | Backs the Receipt Approval Dashboard, rewritten (per its own changelog) to work directly off Receipt__c instead of the Registration Case it used to rely on. fetchReceiptsGroupedByLookup() groups pending receipts by their source (E-Receipt, Bank Transaction, or a plain manual receipt) and validates the requested sort field against an explicit allow-list (Date, Amount, Name) before applying ascending/descending order, preventing an arbitrary or unsafe sort field from being passed through to the query. |
+| `Ex_ReceiptHandlerServices` | Tags each Receipt with the correct Company Bank Account for reconciliation. tagCompanyAccountOnReceipt() resolves each receipt's Booking's Company, then looks up that company's Company Bank Account records, giving the receipt handler (beyond this excerpt) the information needed to automatically associate a payment with the right legal entity's bank account rather than requiring manual selection. |
+| `Ex_ReceiptTriggerHandler` | On Receipt insert, builds several parallel maps grouping new receipts by their parent Application, Booking, and whether they represent on-account money, plus tracking which bookings need Apex sharing extended to cover the new receipts and which receipts came through a Bank Transaction — feeding each group into its own downstream processing (ledger updates, booking total recalculation, sharing) rather than a single monolithic routine. |
+| `Ex_ReceiptViewDashboard` | Backs the Receipt View dashboard on a Booking. getReceiptView() returns every receipt for the booking with its amount, date, payment mode, approval status, apportionment total and transaction Id, including a nested subquery of each receipt's Ledger entries (charge name, tax ledger, amount, and the demand/milestone each ledger line pays down) so the dashboard can show a full drill-down from receipt to individual charge allocation. |
+| `Ex_RefundHandlerServices` | Assigns escalation approvers for refunds flagged under the 'Aggravated' customer category. assignApproversForAggravatedCustomer() resolves each affected Booking's Project and that project's CSS Team Leader (and separately the Launch's CEO), building the approval chain so an aggravated-customer refund is automatically routed to the right senior approvers rather than a standard refund approver. |
+| `Ex_RefundHelpdeskDashboardController` | Backs the Refund Helpdesk dashboard's paginated, sortable refund list. getRefundList() validates the requested sort field against an explicit allow-list (refund name, applicant name, application name, case number, refund amount, due date, document-verified flag, launch name), defaulting to due-date order, before returning the page of refunds matching the requested status. |
+| `Ex_RefundTriggerHandler` | On Refund before-insert, groups new refunds tied to a Booking with Customer_Category__c = 'Aggravated' by their Booking Id, intending to call Ex_RefundHandlerServices.assignApproversForAggravatedCustomer() for the group — that call is currently commented out, so the escalated-approver assignment for aggravated-customer refunds is presently disabled at the trigger level even though the underlying service method still exists. |
+| `Ex_RestEReceiptAPI` | An inbound, without-sharing @RestResource endpoint (/e-receipt) updating E-Receipt records from an external payment system. updateEReceipt() accepts both JSON and form-urlencoded content types (parsing each differently based on the Content-Type header) and rejects an empty request body with a 400, giving the payment integration flexibility in how it posts receipt updates. |
+| `Ex_ViewOnAccountMoneyReceiptController` | A Visualforce controller for viewing 'on account' money receipts (payments received without being apportioned to a specific demand yet), reading the receipt Id from the page URL and exposing the same receipt number/date/type/mode/amount (raw, formatted, in words) and customer contact fields as the other receipt-print controllers. |
+| `Ex_ViewReceiptController` | A Visualforce controller for viewing a receipt tied to a specific Demand. It resolves the primary applicant and a comma-separated co-applicant list plus full address fields, builds a LedgerWrapper list showing how the receipt's amount was allocated across ledger entries, and spells out the total cost in words for the printed/viewed receipt. |
+
+</Section>
+
+
+<Section>
+
+## Test coverage
+
+Coverage comes from the Apex test classes that exercise each production class, measured in the HoABL production org. Where a class has no test class clearly dedicated to it, the test that covers the most of its code is shown instead. Classes with no test coverage at all are omitted from this table.
+
+<Coverage module="finance" />
 
 </Section>

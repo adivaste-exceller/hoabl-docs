@@ -41,38 +41,49 @@ This page documents the 24 objects and 31 Apex classes used by the Loan module.
 
 ## Apex classes
 
-| Class |
-| --- |
-| `DocumentGenerationServices` |
-| `Ex_ApexSharingForBooking` |
-| `Ex_ApexSharingManagementServices` |
-| `Ex_BankAPFsHandlerService` |
-| `Ex_BankAPFsTriggerHandler` |
-| `Ex_BankDSAHandlerServices` |
-| `Ex_BankDSATriggerHandler` |
-| `Ex_BookingHandlerServices` |
-| `Ex_BookingTriggerHandler` |
-| `Ex_CaseAgeBatch` |
-| `Ex_CaseHandlerServices` |
-| `Ex_CaseTriggerHandler` |
-| `Ex_ChecklistController` |
-| `Ex_DocumentHandler` |
-| `Ex_INFormat` |
-| `Ex_LaunchService` |
-| `Ex_LoanCaseHandlerServices` |
-| `Ex_LoanCaseReminderBatch` |
-| `Ex_LoanCaseTriggerHandler` |
-| `Ex_LoanDocumentChecklist` |
-| `Ex_NumberToWordsConverter` |
-| `Ex_OPDocAttachment` |
-| `Ex_ProjectHandlerServices` |
-| `Ex_ProjectService` |
-| `Ex_ProjectTriggerHandler` |
-| `Ex_ReceiptViewDashboard` |
-| `Ex_RestCreateTask` |
-| `Ex_RestTaskDispositionAPI` |
-| `Ex_TaskHandlerServices` |
-| `Ex_TaskTriggerHandler` |
-| `Ex_WordDocumentPreviewController` |
+| Class | Description |
+| --- | --- |
+| `DocumentGenerationServices` | A broad document-generation utility, originally built for an Exceller demo org, that dynamically describes Applicant__c's full field set and queries every field for the primary (or all) applicants on a given Booking using Database.query() with a string-built SOQL statement — used as a data source for generating letters, receipts and other customer-facing documents without hardcoding each field name. |
+| `Ex_ApexSharingForBooking` | Grants Apex-managed sharing on Booking__c records to the full management chain of each booking role. giveApexSharingAccess() queries each booking's Accounts/Closing/Collection/Key-Account/Service/Sourcing Manager along with each manager's own manager and that manager's manager, builds a user-to-booking map from the resulting chain, and (in code not shown here) inserts Booking__Share records so two levels of upline managers can see a booking even without role-hierarchy visibility. |
+| `Ex_ApexSharingManagementServices` | The org's central Apex-managed sharing utility, used by multiple trigger handlers (Applicant, Application) to share Leads, Opportunities and custom objects with specific users or teams outside standard role-hierarchy visibility. shareRecordWithTeamLeadandTeamHead() dynamically builds the correct share-object and parent-field names per SObject type (LeadShare/OpportunityShare/__Share), queries existing shares to avoid duplicate inserts, then shares each record with the mapped team leads and heads. |
+| `Ex_BankAPFsHandlerService` | Validates Bank APFs (Approved Project Financing records) to block duplicate APF numbers within the same RERA Phase. It groups incoming records by APF Number + RERA Phase key, queries existing records sharing those APF numbers, and adds a record error naming the conflicting APF number wherever a new or updated record collides with a different existing record in the same phase. |
+| `Ex_BankAPFsTriggerHandler` | Trigger handler for Bank_APFs__c that filters to only records with both an APF Number and RERA Phase set, then delegates to Ex_BankAPFsHandlerService.validateDuplicateAPF() on insert, and on update re-runs the same check only for records whose APF Number actually changed to a new non-blank value. |
+| `Ex_BankDSAHandlerServices` | Prevents a Bank from being linked to the same Project more than once via separate Bank_DSAs__c (Direct Selling Agent) records. It builds a map of Bank Id to Project Id from the incoming records, calls a duplicate-lookup helper, and adds a record error naming the conflicting existing DSA record whenever a Bank/Project pairing is already represented elsewhere. |
+| `Ex_BankDSATriggerHandler` | Trigger handler for Bank_DSAs__c: on before-insert it filters to records that have both a Bank and Project populated and runs them through Ex_BankDSAHandlerServices' duplication check, and on before-update it re-validates records whose Bank/Project combination has changed, keeping the same-bank-same-project uniqueness rule enforced on every save. |
+| `Ex_BookingHandlerServices` | A large service class holding core Booking__c business logic, including (in code beyond this excerpt) demand-raising based on payment milestone schedules. Its commented-out raiseBookingRelatedDemand() method shows the intended approach: dynamically build a SOQL query across Payment_Milestone__c's full charge breakdown (agreement value, development/consideration/statutory/other charges with GST splits) for bookings due on calculated demand-raise dates, tying milestones back to their Quotation and correspondence contact. |
+| `Ex_BookingTriggerHandler` | The handler behind the Booking__c trigger, covering a wide range of post-booking automation on insert: grouping bookings by Campaign for campaign-performance updates, collecting bookings tied to a CP Launch for channel-partner processing, and (per its header comments) previously also auto-created Registration Cases and ran round-robin Key Account/Collection Manager assignment, both since commented out and left disabled. |
+| `Ex_CaseAgeBatch` | A scheduled batch, built around a hardcoded 2017 cutoff date, that re-queries every open Case (status not Closed) with its full escalation chain (three escalation levels, their TATs and emails, team leader) and recalculates each case's Age_In_Hours__c against HoABL's configured Business Hours, sending notification emails and a custom notification to the case owner as cases cross their response/escalation thresholds. |
+| `Ex_CaseHandlerServices` | A future, callout-enabled method that back-fills a Case's Account, Booking and Application from related records once a case is created, tagging the Account if it was left null. It resolves a default routing user from Case_Management_Default_User__c (matching the admin username with a LIKE pattern so sandbox-suffixed usernames like 'salesforceadmin@force.com.uat' still resolve) and uses that as a fallback owner when no project-specific routing applies. |
+| `Ex_CaseTriggerHandler` | Handles Case trigger logic, including (per this excerpt's afterInsert) loading configured restricted email domains from Case_Domain_Restrictions__c to flag or filter cases whose SuppliedEmail comes from a blocked domain — the actual case-deletion logic for matched domains is currently commented out, leaving the restricted-domain list collected but not yet acted upon in this version. |
+| `Ex_ChecklistController` | Backs a Booking checklist/demands component. getDemands() only returns a booking's Demand__c records (totals paid, demanded and remaining) if the running user is that booking's Accounts Manager, otherwise it returns an empty list with a hasAccess flag set false; updateNoDueChecklist() marks the booking's No Due Checklist as complete once an accounts manager confirms there's nothing outstanding. |
+| `Ex_DocumentHandler` | Sends a document-ready email to a customer. sendEmail() resolves the correct sender address — the 'Updates HoABL' Org-Wide Email Address, or 'Vertical No reply' for vertical projects — and pulls the target Documents__c record's type, future-correspondence contact details and the Project/Service Manager context needed to compose and send the notification. |
+| `Ex_INFormat` | A number-formatting utility (reused from an earlier Exceller demo org) that converts a Decimal amount into the Indian numbering format (lakhs/crores grouping with commas, e.g. 12,34,567 rather than 1,234,567), handling negative values and preserving any decimal portion, used wherever currency amounts need to display in the Indian convention rather than the Western one. |
+| `Ex_LaunchService` | Syncs Launch records to an external CMS/website. insertLaunch() and updateLaunch() are future, callout-enabled methods that load a Launch's public-facing fields (name, salt/key credentials, company name, area and price ranges, organic campaign Id) along with the active HOABL_CMS__c base URL setting, then push each launch to the external CMS via handleApiCall() so the public website's project listings stay in sync with Salesforce. |
+| `Ex_LoanCaseHandlerServices` | Creates DSA (Direct Selling Agent) commission records for Loan Cases. createDSACommissions() matches each Loan Case's Bank and Project against configured Bank_DSAs__c commission percentages, builds a Bank+Project lookup map, and (beyond this excerpt) inserts a DSA_Commission__c for each matching loan case at the agreed percentage rate. |
+| `Ex_LoanCaseReminderBatch` | A scheduled, callout-enabled batch that reminds Loan Managers and their Team Leaders 30 days before a sanctioned loan's Sanction_Expiry_Date__c, querying Loan Cases that are 'Loan Sanctioned' and haven't already had their reminder sent, then emailing the relevant manager/TL and firing a 'Loan_Case_Expiry_Reminder' custom notification before marking the reminder sent. |
+| `Ex_LoanCaseTriggerHandler` | On Loan Case update, watches for a status change to '1st Disbursement Received' on a HoABL-DSA-initiated loan (triggering DSA commission creation, in code now commented out in afterInsert) and separately detects when the disbursed amount changes while the case is already at that same status, collecting those Ids for further processing like updating the related Booking's loan-sanctioned state. |
+| `Ex_LoanDocumentChecklist` | Backs the Loan Document Checklist component. getLoanCase() returns a Loan Case's details, and getNoofApplicants() counts the Applicant__c records on the loan case's parent Booking via an aggregate query, letting the checklist UI show how many applicants' documents still need to be collected. |
+| `Ex_NumberToWordsConverter` | Converts a numeric currency amount into its English words representation (e.g. for cheques or legal documents). config() seeds a lookup list of number words from Zero through at least Nineteen, which the rest of the class (beyond this excerpt) combines with tens/hundreds/thousands/lakhs/crores logic to spell out arbitrarily large Indian-formatted currency amounts in words. |
+| `Ex_OPDocAttachment` | Emails customers when an OP (offer/possession?) document is attached to their Launch. sendEmailToCustomers() resolves the 'Updates HoABL' Org-Wide Email Address and groups the given Leads by their associated Launch, preparing to send each lead a notification that a new document relevant to their launch has become available. |
+| `Ex_ProjectHandlerServices` | Houses Project-level automation, including a commented-out createBankAPFAndDSAForProjects() method that would have auto-generated a Bank_APFs__c and Bank_DSAs__c record for every combination of a new Project and every Bank in the org — since disabled, presumably because that many-to-many record generation proved unnecessary or too broad in practice; the active createProjectInCMS() method (referenced by the Project trigger) pushes new projects to the external CMS. |
+| `Ex_ProjectService` | Syncs Project records to the external CMS, mirroring Ex_LaunchService's pattern. insertProject() and updateProject() are future, callout-enabled methods that load a project's public-facing location fields (street, city, state, pincode, latitude/longitude, altitude) along with the active HOABL_CMS__c base URL, then push each project to the CMS so the public website's project pages stay in sync with Salesforce. |
+| `Ex_ProjectTriggerHandler` | On Project insert, pushes the new project to the external CMS via Ex_ProjectHandlerServices.createProjectInCMS() and also calls Ex_ProjectService.insertProject() — effectively syncing the new project through two separate integration paths — while an older createBankAPFAndDSAForProjects() call is commented out; on update, it detects changes to any CMS-relevant field (name, address fields, etc.) to decide whether a CMS update push is needed. |
+| `Ex_ReceiptViewDashboard` | Backs the Receipt View dashboard on a Booking. getReceiptView() returns every receipt for the booking with its amount, date, payment mode, approval status, apportionment total and transaction Id, including a nested subquery of each receipt's Ledger entries (charge name, tax ledger, amount, and the demand/milestone each ledger line pays down) so the dashboard can show a full drill-down from receipt to individual charge allocation. |
+| `Ex_RestCreateTask` | An inbound @RestResource endpoint (/createTask/) that creates a Task from an external caller (likely the CTI/dialer system), requiring Subject, OpportunityId and OwnerId in the request. It also flags the related Opportunity as having had a missed call and restricts missed-call task creation for opportunities already in certain stages, so the dialer can't spam missed-call tasks onto opportunities past the point where that matters. |
+| `Ex_RestTaskDispositionAPI` | An inbound @RestResource endpoint (/callStatus/*) receiving detailed call disposition data from a CTI system — user, call mode, who disconnected, call type, agent name, status, date/time, duration, queue name/duration, ring duration, who completed it, follow-up time and station — and (beyond this excerpt) writing that outcome onto the corresponding Task. |
+| `Ex_TaskHandlerServices` | Rolls up Task-based call/meeting activity onto its parent record. CallHandlerServices() loads Tasks of specific record types (Presales Call, Sales Call, CSS Task, Loan, CSS Call) with their full disposition and stage context, then groups them by parent Lead, Opportunity, Booking or Loan Case into separate maps so each parent record's rollup fields (like last call status or disposition) can be updated based on its own most relevant task activity. |
+| `Ex_TaskTriggerHandler` | On Task insert, identifies tasks that carry disposition/stage data and belong to specific call-related record types (Presales Call, Sales Call, CSS Task, CSS Call) or are a Loan task, collecting their Ids so Ex_TaskHandlerServices.CallHandlerServices() can roll up the activity onto the right parent record (Lead, Opportunity, Booking or Loan Case). |
+| `Ex_WordDocumentPreviewController` | Supports previewing generated documents (reused from an Exceller demo org). getAllotmentLetterCreated() and getCSSChecklistDone() are simple boolean lookups on a Booking that gate whether certain document-preview or checklist-dependent UI elements should be shown, used as quick pre-conditions before offering a document preview. |
+
+</Section>
+
+
+<Section>
+
+## Test coverage
+
+Coverage comes from the Apex test classes that exercise each production class, measured in the HoABL production org. Where a class has no test class clearly dedicated to it, the test that covers the most of its code is shown instead. Classes with no test coverage at all are omitted from this table.
+
+<Coverage module="loan" />
 
 </Section>
