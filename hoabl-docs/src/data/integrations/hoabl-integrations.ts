@@ -20,6 +20,7 @@ export type IntegrationCategory =
   | 'marketing'
   | 'erp'
   | 'ai'
+  | 'data'
   | 'documents'
   | 'devops'
   | 'legacy';
@@ -33,6 +34,7 @@ export const CATEGORY_META: Record<IntegrationCategory, { label: string; color: 
   marketing: { label: 'Marketing & Ad Platforms', color: '#db2777' },
   erp: { label: 'ERP', color: '#ea580c' },
   ai: { label: 'AI / LLM', color: '#9333ea' },
+  data: { label: 'Data & Analytics', color: '#ca8a04' },
   documents: { label: 'Document Generation', color: '#65a30d' },
   devops: { label: 'DevOps & Internal Tooling', color: '#64748b' },
   legacy: { label: 'Legacy / Unclear', color: '#dc2626' },
@@ -60,9 +62,11 @@ export interface Integration {
    */
   confidence: 'confirmed' | 'config-only';
   note?: string;
+  /** Keeps the entry in this file but removes it from the diagram. Pair with commenting out its section in integrations.mdx. */
+  hidden?: boolean;
 }
 
-export const hoablIntegrations: Integration[] = [
+const allIntegrations: Integration[] = [
   // ---- Payments ----
   {
     slug: 'easebuzz',
@@ -157,6 +161,7 @@ export const hoablIntegrations: Integration[] = [
     config: ['Remote Site: Whatsapp_Media', 'Tab/LWC: Whatsapp_Template_Dashboard'],
     classes: ['Ex_MetaAPIHandler', 'Ex_WhatsappChatServices', 'Ex_WhatsappMsgTriggerHandler', 'SendWhatsappMessage'],
     confidence: 'confirmed',
+    hidden: true,
   },
   {
     slug: 'msg91',
@@ -305,6 +310,22 @@ export const hoablIntegrations: Integration[] = [
     note: 'Analytics-only connectors (no transactional Salesforce objects involved) — listed for completeness since the org has them configured.',
   },
 
+  {
+    slug: 'web-to-lead',
+    name: 'Web-to-Lead',
+    kind: 'Lead capture (website REST + Digital Lead)',
+    category: 'marketing',
+    icon: 'ClipboardList',
+    summary: 'Website, app and Facebook enquiries arrive through a custom REST endpoint or a portal form, are stored as Digital Leads and are turned into Leads, Accounts and Opportunities.',
+    endpoints: ['Salesforce REST: /services/apexrest/CreateLead/ (Ex_RESTWebIntegration) and /services/apexrest/updateOtpVerified/'],
+    inbound: { label: 'REST POST /CreateLead', detail: 'The website, the app or Facebook posts name, mobile, email, city, campaign code and UTM fields with a Lead Identifier (Website, APP or Facebook). Valid requests become a Digital_Lead__c, which a trigger converts into a Lead or Opportunity' },
+    objects: ['Digital_Lead__c', 'Lead', 'Account', 'Opportunity', 'Campaign', 'Process__c', 'Task'],
+    config: ['Apex REST resources: /CreateLead/*, /updateOtpVerified/*', 'Trigger: Ex_DigitalLeadTrigger on Digital_Lead__c', 'Scheduled job: Ex_DigitalLeadShiftScheduler'],
+    classes: ['Ex_RESTWebIntegration', 'CustomerPortal_GuestUserServices', 'Ex_DigitalLeadTriggerHandler', 'Ex_DigitalLeadHandlerServices', 'Ex_RestLeadOtpVerfification', 'Ex_DigitalLeadShiftProcessingBatch', 'Ex_DigitalLeadShiftScheduler'],
+    confidence: 'confirmed',
+    note: 'Built as a custom REST endpoint and a Digital Lead pipeline, not Salesforce’s standard Web-to-Lead servlet. The same endpoint also takes Facebook and app leads. The websites and forms that call it live outside the org and are not visible here.',
+  },
+
   // ---- ERP ----
   {
     slug: 'sap',
@@ -349,6 +370,28 @@ export const hoablIntegrations: Integration[] = [
     classes: [],
     confidence: 'config-only',
     note: 'The revSpotAccountDetails LWC on Account confirms it’s wired up in the UI; the Apex controller behind it wasn’t identified by name in the matrix.',
+  },
+
+  // ---- Data & Analytics ----
+  {
+    slug: 'data-cloud',
+    name: 'Salesforce Data Cloud',
+    kind: 'Customer data platform',
+    category: 'data',
+    icon: 'Database',
+    summary: 'Unifies profile, call and ad data in Data Cloud; a scheduled batch queries it and writes enrichment and recent call history back onto Account, and activations feed Flows.',
+    endpoints: ['hoabl.my.salesforce.com (/services/oauth2/token, then /services/a360/token)', 'Data Cloud instance (/api/v3/query, SQL)'],
+    outbound: { label: 'Query API (SQL)', detail: 'ho_DataCloudAccountBatchNew swaps a core token for a Data Cloud token, then queries data lake and model objects modified in the last 24 hours' },
+    inbound: { label: 'Writeback + activation', detail: 'Enrichment fields and each account’s 3 most recent calls are written to Account; Data Cloud activation records are parsed in Flows by ho_ReadJSON' },
+    objects: ['Account'],
+    config: [
+      'Custom Metadata: Data_Cloud_Auth__mdt (read for the token exchange)',
+      'Data lake objects read: Revspot_Profile_v1, PreSales_business_profile, Presales_employement_details, Presales_vehicle_ownership, PreSales_demat_accounts, Account_Home',
+      'Data model objects read: ssot__Account__dlm, Convox_Combined_CDR_Report__dlm',
+    ],
+    classes: ['ho_DataCloudAccountBatchNew', 'ho_DataCloudAccountEnrichmentBatch', 'ho_DataCloudAccountEnrichmentScheduler', 'ho_ReadJSON', 'ExCustomer360ProfileController'],
+    confidence: 'confirmed',
+    note: 'Also the destination for the native ad connectors (Google Ads, Meta Ads, GA4) and the Convox call stream described elsewhere on this page.',
   },
 
   // ---- Documents ----
@@ -425,3 +468,6 @@ export const hoablIntegrations: Integration[] = [
     note: 'Purpose not identifiable from available metadata alone — could be a legacy sandbox/migration reference or a second org integration. Worth asking the Salesforce admin.',
   },
 ];
+
+/** Everything the diagram and filters see: `hidden` entries are left out. */
+export const hoablIntegrations: Integration[] = allIntegrations.filter((i) => !i.hidden);

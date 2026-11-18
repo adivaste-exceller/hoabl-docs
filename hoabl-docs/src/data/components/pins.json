@@ -1,0 +1,148 @@
+{
+ "lwc": {
+  "ex_CSSWelcomeCallChecklist": [
+   "booking-onboarding-collection"
+  ],
+  "ex_KycFormSite": [
+   "booking-onboarding-collection"
+  ],
+  "ex_applicantUpdationForm": [
+   "booking-onboarding-collection"
+  ],
+  "ex_ApproveApplicantChanges": [
+   "booking-onboarding-collection"
+  ],
+  "ex_InterestWaiverDashboard": [
+   "booking-onboarding-collection"
+  ],
+  "ex_printPossessionDemand": [
+   "booking-onboarding-collection"
+  ],
+  "ex_sendPreintimationMail": [
+   "booking-onboarding-collection"
+  ],
+  "ex_LandGainCalculatorDashboard": [
+   "booking-onboarding-collection"
+  ],
+  "ex_SendInterestEmails": [
+   "booking-onboarding-collection"
+  ],
+  "ex_sendInterestNoticeEmail": [
+   "booking-onboarding-collection"
+  ],
+  "ex_sendPreTerminationLetter": [
+   "booking-onboarding-collection"
+  ],
+  "ex_sendTDSTutorialMail": [
+   "booking-onboarding-collection"
+  ],
+  "ex_sendTerminationLetter": [
+   "booking-onboarding-collection"
+  ],
+  "ex_sendWelcomeEmail": [
+   "booking-onboarding-collection"
+  ],
+  "ex_sendWelcomeEmailBeforeCss": [
+   "booking-onboarding-collection"
+  ],
+  "ex_VCForBooking": [
+   "booking-onboarding-collection"
+  ],
+  "customDemandListView": [
+   "booking-onboarding-collection"
+  ],
+  "ex_customActivities": [
+   "booking-onboarding-collection"
+  ],
+  "ex_IVRDashboard": [
+   "booking-onboarding-collection",
+   "presales"
+  ],
+  "ptpDashboard": [
+   "booking-onboarding-collection"
+  ],
+  "ex_WhatsappTemplateDashboard": [
+   "marketing"
+  ],
+  "ex_CTIDashboard": [
+   "presales"
+  ],
+  "ex_CTIDashboardReUpload": [
+   "presales"
+  ],
+  "ex_neurixDashboard": [
+   "presales"
+  ]
+ },
+ "vf": {
+  "CustomerPortal_WealthLedger": [
+   "booking-onboarding-collection"
+  ],
+  "Ex_AcknowledgementLetterDetails": [
+   "booking-onboarding-collection"
+  ],
+  "Ex_ApplicantBookingForm": [
+   "booking-onboarding-collection"
+  ],
+  "Ex_ApplicantUpdationForm_VF": [
+   "booking-onboarding-collection"
+  ],
+  "Ex_ApproveApplicantChanges_VF": [
+   "booking-onboarding-collection"
+  ],
+  "Ex_InterestCalculatorBookingVF": [
+   "booking-onboarding-collection"
+  ],
+  "Ex_InterestLetter1": [
+   "booking-onboarding-collection"
+  ],
+  "Ex_InternalNotice1": [
+   "booking-onboarding-collection"
+  ],
+  "Ex_InternalNotice2": [
+   "booking-onboarding-collection"
+  ],
+  "Ex_KYCFormVF": [
+   "booking-onboarding-collection"
+  ],
+  "Ex_ManualCaseCreation": [
+   "booking-onboarding-collection"
+  ],
+  "Ex_PaymentReceipt": [
+   "booking-onboarding-collection"
+  ],
+  "Ex_PaymentReceipt1": [
+   "booking-onboarding-collection"
+  ],
+  "Ex_PreTerminationletter": [
+   "booking-onboarding-collection"
+  ],
+  "EX_PrintDemandLetter": [
+   "booking-onboarding-collection"
+  ],
+  "Ex_PrintPaymentReceipt": [
+   "booking-onboarding-collection"
+  ],
+  "Ex_PrintPossesionDemand": [
+   "booking-onboarding-collection"
+  ],
+  "Ex_PrintReceipt": [
+   "booking-onboarding-collection"
+  ],
+  "Ex_StatementofAccount": [
+   "booking-onboarding-collection"
+  ],
+  "Ex_Terminationletter": [
+   "booking-onboarding-collection"
+  ],
+  "Ex_ViewOnAccountMoneyReceipt": [
+   "booking-onboarding-collection"
+  ],
+  "Ex_ViewReceipt": [
+   "booking-onboarding-collection"
+  ],
+  "Ex_DirectOpportunityCreationPresales_VF": [
+   "presales"
+  ]
+ }
+}

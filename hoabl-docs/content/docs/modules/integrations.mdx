@@ -81,6 +81,8 @@ A live, active Remote Site Setting for `api.agent.in.arrowhead.team` exists in t
 
 The Marketing Cloud Connect managed package (`et4ae5__`) is configured with 30+ Remote Site Settings covering REST, SOAP and auth endpoints across multiple Business Units and tenants. Flows prep SFMC-formatted fields (e.g. `Update_ChannelPartner_Mobile_SFMC_Format`) and the connector syncs them for email/SMS/WhatsApp journeys &mdash; this runs through the managed package and declarative flows rather than custom Apex, so no class names apply.
 
+{/* Hidden on request. To show it again, delete these comment markers and remove `hidden: true` from the whatsapp entry in src/data/integrations/hoabl-integrations.ts.
+
 ### WhatsApp Business API (Meta)
 
 Sends WhatsApp template messages and receives inbound chat/media via the Meta Graph API.
@@ -91,6 +93,8 @@ Sends WhatsApp template messages and receives inbound chat/media via the Meta Gr
 | **Objects** | `Case`, `Account`, `Booking__c` |
 | **Config** | Remote Site: `Whatsapp_Media` &middot; Tab/LWC: `Whatsapp_Template_Dashboard` |
 | **Classes** | `Ex_MetaAPIHandler`, `Ex_WhatsappChatServices`, `Ex_WhatsappMsgTriggerHandler`, `SendWhatsappMessage` |
+
+*/}
 
 ### MSG91 &mdash; SMS / OTP gateway `config-only`
 
@@ -164,6 +168,41 @@ All four of the following are native Data Cloud / CRM Analytics connectors (decl
   Two Data Cloud credentials pointing at `graph.facebook.com` are named `b` and `SFTP_Source` &mdash; neither name reflects what they actually connect to. Worth renaming for anyone auditing the org later.
 </Callout>
 
+### Web-to-Lead
+
+Website, app and Facebook enquiries arrive through a custom REST endpoint or a portal form. They are stored as Digital Leads and then turned into Leads, Accounts and Opportunities.
+
+| | |
+| --- | --- |
+| **Endpoint** | Apex REST `/services/apexrest/CreateLead/` (`Ex_RESTWebIntegration`) and `/services/apexrest/updateOtpVerified/` |
+| **Objects** | `Digital_Lead__c`, `Lead`, `Account`, `Opportunity`, `Campaign`, `Process__c`, `Task` |
+| **Config** | Trigger `Ex_DigitalLeadTrigger` on `Digital_Lead__c` &middot; Scheduled job `Ex_DigitalLeadShiftScheduler` |
+| **Classes** | `Ex_RESTWebIntegration`, `CustomerPortal_GuestUserServices`, `Ex_DigitalLeadTriggerHandler`, `Ex_DigitalLeadHandlerServices`, `Ex_RestLeadOtpVerfification`, `Ex_DigitalLeadShiftProcessingBatch`, `Ex_DigitalLeadShiftScheduler` |
+
+**How a lead flows through**
+
+<Steps>
+<Step>
+
+**Capture.** `Ex_RESTWebIntegration` accepts `POST /CreateLead/` with name, mobile, email, city, campaign code and UTM fields, plus a Lead Identifier of `Website`, `APP` or `Facebook`. It rejects a request with a missing required field, a bad email or an unknown campaign code. Otherwise it inserts a `Digital_Lead__c`. The portal form does the same through `CustomerPortal_GuestUserServices.createDigitalLead`, using the launch's website-organic campaign.
+
+</Step>
+<Step>
+
+**Convert.** `Ex_DigitalLeadTrigger` calls `Ex_DigitalLeadTriggerHandler` on insert, and on update when the record is reset to not executed. That calls `Ex_DigitalLeadHandlerServices.fbLeadProcess`, which reads the Campaign (or Process) for the Lead Source and Sub Source, then creates the Lead, Account, Opportunity and Task records. The REST response returns the Salesforce Id of the resulting Lead or Opportunity.
+
+</Step>
+<Step>
+
+**Follow up.** `Ex_RestLeadOtpVerfification` (`POST /updateOtpVerified/`) marks a Lead as OTP verified. `Ex_DigitalLeadShiftProcessingBatch` releases leads held overnight (11 PM to 8 AM) to the CTI dialer each morning.
+
+</Step>
+</Steps>
+
+<Callout type="info" title="Not the standard Web-to-Lead servlet">
+  This is a custom endpoint and pipeline, not Salesforce's built-in Web-to-Lead form. The same endpoint also takes Facebook and app leads. The websites and forms that call it live outside the org, so which ones are live isn't visible here.
+</Callout>
+
 </Section>
 
 <Section>
@@ -187,6 +226,30 @@ Remote Site `Groq_Test` points at `api.groq.com`. The `_Test` suffix suggests an
 ### RevSpot &mdash; AI sales/brokerage tool `config-only`
 
 `api.revspot.ai` is live as a Remote Site Setting, and the `revSpotAccountDetails` LWC on the Account page confirms it's wired into the UI. The Apex controller behind it wasn't identified by name.
+
+</Section>
+
+<Section>
+
+## Data & Analytics
+
+### Salesforce Data Cloud
+
+Unifies profile, call and ad data in Data Cloud. A scheduled batch queries it and writes enrichment and recent call history back onto `Account`, and Data Cloud activations feed Flows.
+
+| | |
+| --- | --- |
+| **Endpoint** | `hoabl.my.salesforce.com` (`/services/oauth2/token`, then `/services/a360/token`) &middot; Data Cloud instance `/api/v3/query` (SQL) |
+| **Objects** | `Account` |
+| **Config** | Custom Metadata: `Data_Cloud_Auth__mdt` (read for the token exchange) |
+| **Data read** | Data lake objects `Revspot_Profile_v1`, `PreSales_business_profile`, `Presales_employement_details`, `Presales_vehicle_ownership`, `PreSales_demat_accounts`, `Account_Home` &middot; Data model objects `ssot__Account__dlm`, `Convox_Combined_CDR_Report__dlm` |
+| **Classes** | `ho_DataCloudAccountBatchNew`, `ho_DataCloudAccountEnrichmentBatch`, `ho_DataCloudAccountEnrichmentScheduler`, `ho_ReadJSON`, `ExCustomer360ProfileController` |
+
+`ho_DataCloudAccountBatchNew` exchanges a core access token for a Data Cloud token, then queries records modified in the last 24 hours. It writes the enrichment fields and each account's three most recent calls onto `Account`. `ho_DataCloudAccountEnrichmentScheduler` runs it in batches of 200. `ho_ReadJSON` is an invocable method that parses Data Cloud activation records inside Flows.
+
+<Callout type="info" title="Also feeds Data Cloud">
+  Data Cloud is also the destination for the native ad connectors (Google Ads, Meta Ads, GA4) and the Convox call stream described elsewhere on this page.
+</Callout>
 
 </Section>
 

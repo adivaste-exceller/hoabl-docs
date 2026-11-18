@@ -1,6 +1,8 @@
 import defaultMdxComponents from 'fumadocs-ui/mdx';
 import { Step, Steps } from 'fumadocs-ui/components/steps';
 import type { MDXComponents } from 'mdx/types';
+import { ApexClasses } from '@/components/apex/apex-classes';
+import { LwcComponents, VfPages } from '@/components/apex/components-sections';
 import { Callout } from '@/components/callout';
 import { Coverage } from '@/components/coverage/coverage';
 import { ERDiagram } from '@/components/erd/erd-diagram';
@@ -11,6 +13,9 @@ import { Section } from '@/components/section';
 export function getMDXComponents(components?: MDXComponents) {
   return {
     ...defaultMdxComponents,
+    ApexClasses,
+    LwcComponents,
+    VfPages,
     Callout,
     Coverage,
     Step,
