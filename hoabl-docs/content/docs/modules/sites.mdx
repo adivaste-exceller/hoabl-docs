@@ -1,0 +1,32 @@
+---
+title: Sites
+description: The public Salesforce Sites HoABL runs, and the Visualforce pages, Aura components, LWCs and Apex classes behind each one.
+icon: Globe
+full: true
+---
+
+<Section open>
+
+## Overview
+
+A Site is a public entry point into Salesforce: a form a channel partner or customer fills in without logging in, or an endpoint another system calls. Each site below lists everything that serves it.
+
+Select a site to open it. Web-form sites follow one chain, shown left to right, and each LWC lists the Apex controllers it calls itself.
+
+For example, the CP Registration Form site is a Visualforce page that loads an Aura app, which renders an LWC, which calls Apex:
+
+`cp_registration_form` (Visualforce) &rarr; `cp_registration_form` (Aura) &rarr; `ex_CPRegistrationForm` (LWC) &rarr; `Ex_CPRegistrationFormController` (Apex)
+
+<Callout type="info" title="How this page is built">
+  Each site is identified by its guest user profile, named after the site, which lists the Visualforce pages and Apex classes the public can reach. The chain from page to Aura to LWC to Apex is read from the source code. Test classes are left out.
+</Callout>
+
+<Callout type="warn" title="Not shown here">
+  The site definitions themselves (URL, status and home page) and the Experience Cloud content of the two portals are not part of the standard retrieve, so there are no URLs on this page. The portals therefore list only their Visualforce pages and Apex classes. Add `CustomSite`, `Network` and `DigitalExperienceBundle` to the retrieve to include them.
+</Callout>
+
+</Section>
+
+## Sites
+
+<Sites />

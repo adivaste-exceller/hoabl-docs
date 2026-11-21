@@ -9,6 +9,7 @@ import { ERDiagram } from '@/components/erd/erd-diagram';
 import { EntityOverview, SchemaTables } from '@/components/erd/schema-tables';
 import { IntegrationDiagram } from '@/components/integration/integration-diagram';
 import { Section } from '@/components/section';
+import { Sites } from '@/components/sites/sites';
 
 export function getMDXComponents(components?: MDXComponents) {
   return {
@@ -25,6 +26,7 @@ export function getMDXComponents(components?: MDXComponents) {
     SchemaTables,
     IntegrationDiagram,
     Section,
+    Sites,
     ...components,
   } satisfies MDXComponents;
 }
